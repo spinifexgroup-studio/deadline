@@ -18,10 +18,10 @@ def __main__():
 	global settings
 	
 	dialogWidth = 250
-	dialogHeight = 200
+	dialogHeight = 500
 	labelWidth = 100
 	tabHeight = 600
-	padding = 12
+	padding = 20
 	popupWidth = dialogWidth-labelWidth-padding
 	fullWidth = dialogWidth-labelWidth-padding
 	
@@ -91,6 +91,7 @@ def CancelButtonPressed( *args ):
 
 def SubmitButtonPressed( *args ):
 	global scriptDialog
+	submitResultsString = ""
 	
 	# Get list of jobs
 	jobs = JobUtils.GetSelectedJobs()
@@ -145,6 +146,9 @@ def SubmitButtonPressed( *args ):
 			outputDirectory = outputDirectories[j]
 			outputFilename = outputFilenames[j]
 			outputPath = Path.Combine(outputDirectory,outputFilename).replace("//","/")
+			moviePath = outputDirectory + "/" + Path.GetFileNameWithoutExtension( outputPath )
+			moviePath = moviePath.replace("_#","").replace(".#","").replace("[#","").replace("#]","").replace("#","")
+			moviePath = moviePath + '.mov'
 			
 			pluginDirectory = RepositoryUtils.GetScriptsDirectory() + '/Jobs/JobCreateQuicktime'
 			templateNukeScript = pluginDirectory + '/JobCreateQuicktimeNukeTemplate.nk'
@@ -157,23 +161,51 @@ def SubmitButtonPressed( *args ):
 			sceneFile = JobUtils.GetDataFilename( i )
 			firstFrame = JobUtils.GetFirstFrame( i )
 			lastFrame = JobUtils.GetLastFrame( i )
-			sequencePath = JobUtils.GetOutputFilename( i , 0 )
-			comment = JobUtils.GetCurrentJobValue ( i , 'comment' )
-			user = JobUtils.GetCurrentJobValue ( i , 'user' )
 			
 			# Create Nuke Script for submission
 			nukeInputSequence = outputPath
-			nukePath = '/Applications/Nuke6.3v4/Nuke6.3v4.app/Contents/MacOS/Nuke6.3v4'
+			nukePath = ''
+			if IsRunningOnMac():
+				nukePath = '/Applications/Nuke6.3v4/Nuke6.3v4.app/Contents/MacOS/Nuke6.3v4'
+			else:
+				nukePath = 'C:/Program Files/Nuke6.3v1/Nuke6.3.exe'
+
 			nukePythonScript = pluginDirectory + '/ModifyNukeTemplate.py'
-			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , nukeInputSequence , outputPath ]
+			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , nukeInputSequence , moviePath ]
 			for k in range ( 1, len (nukeArgList) ):
 				nukeArgList[k] = '\"' + nukeArgList[k] + '\"'
 			nukeArgList.extend( [ str(firstFrame) , str(lastFrame) , str(scaleAmount) , str(frameRate) , codec, ] )
 			nukeArgs = ' '.join( nukeArgList )
 			nukeProcess = ProcessUtils.SpawnProcess ( nukePath , nukeArgs, currentUserTempDirectory )
-			if not ProcessUtils.WaitForExit ( nukeProcess, 10000 ) # Wait up to ten seconds for script to be made
+			if not ProcessUtils.WaitForExit ( nukeProcess, 10000 ): # Wait up to ten seconds for script to be made
 				return #nuke failed
 
+			# Create job info file
+			jobInfoFile = currentUserTempDirectory + ("/nuke_quicktime_submit_info.job")
+			fileHandle = open( jobInfoFile, "w" )
+			fileHandle.write( "Plugin=Nuke\n" )
+			fileHandle.write( "Name=%s [CREATE QUICKTIME]\n" % job.JobName )
+			fileHandle.write( "Comment=Making QT from %s\n" % job.JobName )
+			fileHandle.write( "Department=%s\n" % "Pure Awesome" )
+			fileHandle.write( "Pool=%s\n" % "2d_nuke_qt" )
+			fileHandle.write( "Group=%s\n" % "2d_mac" )
+			fileHandle.write( "Priority=%s\n" % str(job.JobPriority) )
+			fileHandle.write( "MachineLimit=1\n" )
+			fileHandle.write( "ConcurrentTasks=1\n" )
+			fileHandle.write( "Frames=%s\n" % str(job.JobFrames) )
+			fileHandle.write( "ChunkSize=100000\n")
+			if job.JobStatus != 'Completed':
+				fileHandle.write( "JobDependencies=%s\n" % job.JobId )
+			fileHandle.close()
+
+			# Create the plugin info file
+			pluginInfoFile = currentUserTempDirectory + ("/nuke_quicktime_plugin_info.job")
+			fileHandle = open( pluginInfoFile, "w" )
+			fileHandle.write( "Version=%s.%s\n" % (6, 3) )
+			fileHandle.close()
+
+			submitString = ClientUtils.ExecuteCommandAndGetOutput ( ( jobInfoFile , pluginInfoFile , submissionNukeScript) )
+			submitResultsString = submitResultsString+submitString+'\n'
 			# Debugging
 			'''
 			tempFileHandle.write ( str(job.JobName)+'\n' )
@@ -191,10 +223,11 @@ def SubmitButtonPressed( *args ):
 			tempFileHandle.write ( str(nukePath+' '+nukePythonScript+' '+nukeArgs)+'\n' )			
 			tempFileHandle.write ( '\n' )
 			
-			''''
+			'''
 		
 	tempFileHandle.close()
 	CloseDialog()
+	scriptDialog.ShowMessageBox ( submitResultsString , 'Result' )
 
 
 def CloseDialog():
