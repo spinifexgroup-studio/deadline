@@ -1,0 +1,324 @@
+#! /Applications/Nuke6.3v4/NukeX6.3v4.app/../Nuke6.3v4.app/Contents/MacOS/Nuke6.3v4 -nx
+version 6.3 v4
+define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
+<layout version="1.0">
+    <window x="0" y="0" w="2560" h="1440" fullscreen="1" screen="0">
+        <splitter orientation="1">
+            <split size="43"/>
+            <dock id="" activePageId="Toolbar.1">
+                <page id="Toolbar.1"/>
+            </dock>
+            <split size="2002"/>
+            <dock id="" activePageId="DAG.1">
+                <page id="DAG.1"/>
+                <page id="Curve Editor.1"/>
+                <page id="DopeSheet.1"/>
+                <page id="Script Editor.1"/>
+                <page id="Error Console.1"/>
+            </dock>
+            <split size="507"/>
+            <dock id="" activePageId="Properties.1">
+                <page id="Properties.1"/>
+            </dock>
+        </splitter>
+    </window>
+    <window x="2560" y="0" w="1920" h="1200" fullscreen="1" screen="2">
+        <splitter orientation="2">
+            <split size="1200"/>
+            <dock id="" activePageId="Viewer.1">
+                <page id="Viewer.1"/>
+            </dock>
+        </splitter>
+    </window>
+</layout>
+}
+Root {
+ inputs 0
+ name /Volumes/RESOURCES/05_Motion_Studio_Tools/deadline/event_plugins/SlatedQuicktimeGen/nuke/slate_v001.nk
+ frame 7
+ lock_range true
+ format "2048 1556 0 0 2048 1556 1 2K_Super_35(full-ap)"
+ proxy_type scale
+ proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+}
+BackdropNode {
+ inputs 0
+ name Variables
+ xpos 168
+ ypos -997
+ bdwidth 395
+ bdheight 217
+ addUserKnob {20 User}
+ addUserKnob {3 InputSequenceFirstFrame l "First Frame"}
+ InputSequenceFirstFrame 1000
+ addUserKnob {3 InputSequenceLastFrame l "Last Frame"}
+ InputSequenceLastFrame 1000
+}
+Constant {
+ inputs 0
+ color {0 0 0 0}
+ format "1920 1080 0 0 1920 1080 1 HD"
+ name Constant1
+ xpos -723
+ ypos -705
+}
+Text {
+ message "Spinifex Group"
+ font /Volumes/RESOURCES/05_Motion_Studio_Tools/deadline/event_plugins/SlatedQuicktimeGen/nuke/Arial.ttf
+ size 100
+ yjustify top
+ box {480 270 1440 810}
+ translate {-288 160}
+ center {960 540}
+ color {0.03534782305 0.4799999893 0 1}
+ name title
+ xpos -723
+ ypos -561
+}
+Text {
+ message "Job Name\nProject\nSequence\nShot\nVersion\nFrames\nDate\nSequence Directory\nProject File\nComments\n"
+ font /Volumes/RESOURCES/05_Motion_Studio_Tools/deadline/event_plugins/SlatedQuicktimeGen/nuke/Arial.ttf
+ size 40
+ leading 0.2
+ xjustify right
+ yjustify top
+ Transform 1
+ box {20 30 518 {height-height/3 i x40 579}}
+ center {1024 1024}
+ name columnLeft
+ xpos -723
+ ypos -513
+}
+Text {
+ message "_JobName_\n_Project_\n_Sequence_\n_Shot_\n_Version_\n_Frames_\n\[ clock format \[ clock seconds ] -format \"%Y-%m-%d %T\" ]\n_FramePath_\n_ProjectPath_\n_Comments_"
+ font /Volumes/RESOURCES/05_Motion_Studio_Tools/deadline/event_plugins/SlatedQuicktimeGen/nuke/Arial.ttf
+ size 40
+ leading 0.2
+ yjustify top
+ Transform 1
+ box {580 30 1730 {height-height/3 i x40 630}}
+ center {1024 1024}
+ name columnRight
+ xpos -723
+ ypos -489
+}
+Text {
+ message "*** 24FPS ***"
+ font /Volumes/RESOURCES/05_Motion_Studio_Tools/deadline/event_plugins/SlatedQuicktimeGen/nuke/Arial.ttf
+ size 40
+ leading 0.2
+ yjustify top
+ Transform 1
+ box {580 30 1730 {100 i x40 630}}
+ center {1024 1024}
+ color {1 0.8880113363 0 1}
+ name warning
+ xpos -723
+ ypos -465
+}
+Reformat {
+ type "to box"
+ box_width {{Read1.width i}}
+ box_height {{Read1.height i}}
+ box_fixed true
+ resize fit
+ black_outside true
+ name Reformat1
+ xpos -723
+ ypos -393
+}
+Read {
+ inputs 0
+ file _InputSequence_
+ format "1920 1080 0 0 1920 1080 1 HD"
+ first {{parent.Variables.InputSequenceFirstFrame i}}
+ last {{parent.Variables.InputSequenceLastFrame i}}
+ origfirst {{parent.Variables.InputSequenceFirstFrame i}}
+ origlast {{parent.Variables.InputSequenceLastFrame i}}
+ origset true
+ version 3
+ name Read1
+ xpos -260
+ ypos -1085
+}
+ColorBars {
+ inputs 0
+ format {{{Read1.format}}}
+ barintensity 1
+ name ColorBars1
+ xpos -45
+ ypos -1077
+}
+Reformat {
+ type "to box"
+ box_width {{Read1.width i}}
+ box_height {{Read1.height i}}
+ box_fixed true
+ resize fit
+ black_outside true
+ name Reformat4
+ xpos -45
+ ypos -956
+}
+Switch {
+ inputs 2
+ which {{"inrange(frame, \[value Variables.InputSequenceFirstFrame], \[value Variables.InputSequenceLastFrame])" i}}
+ name Switch1
+ xpos -260
+ ypos -897
+}
+Dot {
+ name Dot2
+ xpos -232
+ ypos -756
+}
+set N1a113030 [stack 0]
+Blur {
+ size 100
+ name Blur1
+ xpos -260
+ ypos -590
+}
+Grade {
+ multiply 0.075
+ name Grade1
+ xpos -260
+ ypos -556
+}
+Merge2 {
+ inputs 2
+ name Merge2
+ xpos -260
+ ypos -393
+}
+set N1a126520 [stack 0]
+push $N1a113030
+Dot {
+ name Dot1
+ xpos 98
+ ypos -756
+}
+Dot {
+ name Dot3
+ xpos 98
+ ypos -337
+}
+Switch {
+ inputs 2
+ which {{"inrange(frame, \[value Variables.InputSequenceFirstFrame], \[value Variables.InputSequenceFirstFrame])" i}}
+ name Switch2
+ xpos -260
+ ypos -334
+}
+Reformat {
+ type "to box"
+ box_width {{width i}}
+ box_height {{height*1.11 i}}
+ box_fixed true
+ black_outside true
+ name Reformat2
+ xpos -260
+ ypos -297
+}
+Crop {
+ box {0 0 {width i} {height i}}
+ reformat true
+ crop false
+ name Crop2
+ xpos -260
+ ypos -273
+}
+set N28fb9cd0 [stack 0]
+Reformat {
+ type scale
+ scale 0.5
+ black_outside true
+ name Reformat5
+ xpos -260
+ ypos -250
+}
+Crop {
+ box {0 0 {width i} {height i}}
+ reformat true
+ crop false
+ name Crop1
+ xpos -260
+ ypos -215
+ postage_stamp true
+}
+set N1a142470 [stack 0]
+Reformat {
+ type "to box"
+ box_width 1920
+ box_height 1200
+ box_fixed true
+ resize fit
+ black_outside true
+ name Reformat3
+ xpos -50
+ ypos -191
+}
+push $N1a142470
+Switch {
+ inputs 2
+ which {{"\[if \{\[value Crop1.width]>1920 || \[value Crop1.height]>1200\} \{return 1\} else \{return 0\}]"}}
+ name SwitchResizeGreaterThanHD
+ xpos -260
+ ypos -125
+}
+Text {
+ font /Volumes/RESOURCES/05_Motion_Studio_Tools/deadline/event_plugins/SlatedQuicktimeGen/nuke/Arial.ttf
+ size {{height/30 i}}
+ yjustify bottom
+ Transform 1
+ box {0 0 {width-20 i} {height/10-20 i x28 129.6}}
+ translate {10 10}
+ name bottomTextLeft
+ xpos -260
+ ypos -67
+}
+Text {
+ message "\[ clock format \[ clock seconds ] -format \"%Y-%m-%d %T\" ]"
+ font /Volumes/RESOURCES/05_Motion_Studio_Tools/deadline/event_plugins/SlatedQuicktimeGen/nuke/Arial.ttf
+ size {{height/30 i}}
+ yjustify bottom
+ Transform 1
+ box {0 0 {width/2-20 i} {height/10-20 i x28 129.6}}
+ translate {{width/2+10 i} 10}
+ name bottomTextRight
+ xpos -260
+ ypos -43
+}
+Text {
+ message "_JobName_\n"
+ font /Volumes/RESOURCES/05_Motion_Studio_Tools/deadline/event_plugins/SlatedQuicktimeGen/nuke/Arial.ttf
+ size {{height/30 i}}
+ yjustify top
+ Transform 1
+ box {0 0 {width-20 i} {-(height/10-20) i x28 129.6}}
+ translate {10 {height-10 i}}
+ name topTextLeft
+ xpos -260
+ ypos -9
+}
+Write {
+ file _FileDestination_.mov
+ colorspace sRGB
+ file_type mov
+ keyframerate 0
+ settings 0000000000000000000000000000019a7365616e0000000100000001000000000000018676696465000000010000000e00000000000000227370746c0000000100000000000000006d6a7061000000000018000003ff000000207470726c000000010000000000000000000000000018000000000000000000246472617400000001000000000000000000000000000000530000010000000100000000156d70736f00000001000000000000000000000000186d66726100000001000000000000000000000000000000187073667200000001000000000000000000000000000000156266726100000001000000000000000000000000166d70657300000001000000000000000000000000002868617264000000010000000000000000000000000000000000000000000000000000000000000016656e647300000001000000000000000000000000001663666c67000000010000000000000000004400000018636d66720000000100000000000000006170706c00000014636c75740000000100000000000000000000001c766572730000000100000000000000000003001c00010000
+ checkHashOnRead false
+ name Write1
+ xpos -260
+ ypos 268
+}
+push $N1a126520
+push $N28fb9cd0
+Viewer {
+ inputs 2
+ frame 7
+ input_process false
+ name Viewer1
+ xpos 63
+ ypos 5
+}
