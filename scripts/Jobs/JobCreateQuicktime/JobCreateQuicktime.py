@@ -3,6 +3,7 @@ from System.Text import *
 
 from Deadline.Scripting import *
 
+from datetime import date
 ########################################################################
 ## Globals
 ########################################################################
@@ -18,12 +19,12 @@ def __main__():
 	global settings
 	
 	dialogWidth = 250
-	dialogHeight = 500
+	dialogHeight = 400
 	labelWidth = 100
 	tabHeight = 600
-	padding = 20
-	popupWidth = dialogWidth-labelWidth-padding
-	fullWidth = dialogWidth-labelWidth-padding
+	padding = 24
+	smallControlWidth = dialogWidth-labelWidth-padding
+	fullControlWidth = dialogWidth-labelWidth-padding
 	
 	scriptDialog = DeadlineScriptEngine.GetScriptDialog()
 	
@@ -31,44 +32,78 @@ def __main__():
 	scriptDialog.SetTitle( 'Create Quicktime' )
 	
 	# Start Settings Group
-	scriptDialog.AddGroupBox( 'GroupBox', 'Quicktime Settings', False )
+	scriptDialog.AddGroupBox( 'GroupBox', 'Movie Settings', False )
 	# FPS Range Slider
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'FPSLabel', 'LabelControl', 'FPS', labelWidth, -1 )
-	scriptDialog.AddRangeControl ( 'FPSRangeBox', 'RangeControl', 30, 1, 60, 0, 1, fullWidth, -1 )
+	scriptDialog.AddRangeControl ( 'FPSRangeBox', 'RangeControl', 30, 1, 60, 0, 1, fullControlWidth, -1 )
 	scriptDialog.EndRow()
 	'''
 	# FPS Range Popup
 	fps = ('25', '30', '50', '60')
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'ResolutionLabel', 'LabelControl', 'Resolution', labelWidth, -1 )
-	scriptDialog.AddComboControl ( 'FPSRangeBox' , 'ComboControl', fps[1], fps, popupWidth, -1 )
+	scriptDialog.AddComboControl ( 'FPSRangeBox' , 'ComboControl', fps[1], fps, smallControlWidth, -1 )
 	scriptDialog.EndRow()
 	'''
 	# Resolution Popup
 	resolutions = ('Full Resolution', 'Half Resolution', 'Third Resolution', 'Quarter Resolution')
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'ResolutionLabel', 'LabelControl', 'Resolution', labelWidth, -1 )
-	scriptDialog.AddComboControl ( 'ResolutionComboBox' , 'ComboControl', resolutions[1], resolutions, popupWidth, -1 )
+	scriptDialog.AddComboControl ( 'ResolutionComboBox' , 'ComboControl', resolutions[1], resolutions, smallControlWidth, -1 )
 	scriptDialog.EndRow()
 	# Codec Popup
 	codecs = ('Animation','H.264','ProRes 422')
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'CodecLabel', 'LabelControl', 'Codec', labelWidth, -1 )
-	scriptDialog.AddComboControl ( 'CodecComboBox' , 'ComboControl', codecs[2], codecs, popupWidth, -1 )
+	scriptDialog.AddComboControl ( 'CodecComboBox' , 'ComboControl', codecs[2], codecs, smallControlWidth, -1 )
 	scriptDialog.EndRow()
+	'''
 	# Bitrate Range
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'BitRateLabel', 'LabelControl', 'H.264 Bit Rate', labelWidth, -1 )
-	scriptDialog.AddRangeControl ( 'BitRateRangeBox', 'RangeControl', 8000, 1000, 20000, 0, 1000, fullWidth, -1 )
+	scriptDialog.AddRangeControl ( 'BitRateRangeBox', 'RangeControl', 8000, 1000, 20000, 0, 1000, fullControlWidth, -1 )
 	scriptDialog.EndRow()
-	# Slate Checkbox
-	scriptDialog.AddRow()
-	scriptDialog.AddControl( 'DummyLabel', 'LabelControl', '', labelWidth, -1 )
-	scriptDialog.AddSelectionControl( 'CheckBox', 'CheckBoxControl', False, 'Show slate and frames', fullWidth, -1 )
-	scriptDialog.EndRow()
+	'''
 	# End Settings group
 	scriptDialog.EndGroupBox( False )
+	
+	# Start Location Group
+	scriptDialog.AddGroupBox( 'GroupBox', 'Save Location', False )
+	# Add Radio Buttons
+	scriptDialog.AddRow()
+	scriptDialog.AddControl( 'LocationLabel', 'LabelControl', 'Location', labelWidth, -1 )
+	scriptDialog.AddRadioControl( "RadioDirSame", "RadioControl", False, "Same Directory", "LocationGroup", smallControlWidth, -1 )
+	scriptDialog.EndRow()
+	scriptDialog.AddRow()
+	scriptDialog.AddControl( 'LocationDummyLabel1', 'LabelControl', '', labelWidth, -1 )
+	scriptDialog.AddRadioControl( "RadioDirParent", "RadioControl", False, "Parent Directory", "LocationGroup", smallControlWidth, -1 )
+	scriptDialog.EndRow()
+	scriptDialog.AddRow()
+	scriptDialog.AddControl( 'LocationDummyLabel2', 'LabelControl', '', labelWidth, -1 )
+	scriptDialog.AddRadioControl( "RadioDir2dWip", "RadioControl", True, "2D/_Renders/WIP", "LocationGroup", smallControlWidth, -1 )
+	scriptDialog.EndRow()
+	scriptDialog.AddRow()
+	scriptDialog.AddControl( 'LocationDummyLabel3', 'LabelControl', '', labelWidth, -1 )
+	scriptDialog.AddRadioControl( "RadioDir3dWip", "RadioControl", False, "3D/Renders/_WIP", "LocationGroup", smallControlWidth, -1 )
+	scriptDialog.EndRow()
+	# End Location group 
+	scriptDialog.EndGroupBox( False )
+
+	# Start Settings Group
+	scriptDialog.AddGroupBox( 'GroupBox', 'Other Settings', False )
+	# Slate Checkbox
+	scriptDialog.AddRow()
+	scriptDialog.AddSelectionControl( 'SlateCheckBox', 'CheckBoxControl', False, 'Show slate and frames', dialogWidth-padding, -1 )
+	scriptDialog.EndRow()
+	# Date Checkbox
+	scriptDialog.AddRow()
+	scriptDialog.AddSelectionControl( 'AppendDateCheckBox', 'CheckBoxControl', True, 'Append date to filename', dialogWidth-padding, -1 )
+	scriptDialog.EndRow()
+	# End Location group 
+	scriptDialog.EndGroupBox( False )
+
+	
 	# Submit and Cancel buttons
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'DummyLabel1', 'LabelControl', '', dialogWidth-232,-1 )
@@ -99,9 +134,11 @@ def SubmitButtonPressed( *args ):
 	
 	# Get Data from Dialog Box
 	codec = str( scriptDialog.GetValue( 'CodecComboBox' ) )
-	bitRate = int( scriptDialog.GetValue( 'BitRateRangeBox' ) )
+	# bitRate = int( scriptDialog.GetValue( 'BitRateRangeBox' ) )
 	frameRate = int( scriptDialog.GetValue( 'FPSRangeBox' ) )
 	resolution = str( scriptDialog.GetValue( 'ResolutionComboBox' ) )
+	shouldAppendLocation = scriptDialog.GetEnabled ( 'AppendDateCheckBox' )
+	shouldWriteSlate = scriptDialog.GetEnabled ( 'SlateCheckBox' )
 	scaleAmount = 1.0
 	
 	# Get Scale Res
@@ -148,7 +185,24 @@ def SubmitButtonPressed( *args ):
 			outputPath = Path.Combine(outputDirectory,outputFilename).replace("//","/")
 			moviePath = outputDirectory + "/" + Path.GetFileNameWithoutExtension( outputPath )
 			moviePath = moviePath.replace("_#","").replace(".#","").replace("[#","").replace("#]","").replace("#","")
-			moviePath = moviePath + '.mov'
+			
+			if shouldWriteSlate:
+				moviePath = ToPlatformIndependentPath ( ToPlatformIndependentPath )
+				moviePathSplit = moviePath.split ('/')
+			
+			if shouldAppendLocation:
+				dateString = str ( date.today() )
+				haveFoundDatedFileName = False
+				k = 1
+				while not haveFoundDatedFileName:
+					versionString = '{0:02d}'.format(k)
+					k = k + 1
+					newMoviePath = moviePath + '_' + dateString + '_' + versionString + '.mov'
+					if not FileExists (newMoviePath):
+						moviePath = newMoviePath
+						haveFoundDatedFileName = True
+			else:
+				moviePath = moviePath + '.mov'
 			
 			pluginDirectory = RepositoryUtils.GetScriptsDirectory() + '/Jobs/JobCreateQuicktime'
 			templateNukeScript = pluginDirectory + '/JobCreateQuicktimeNukeTemplate.nk'
