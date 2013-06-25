@@ -4,6 +4,10 @@ from System.Text import *
 from Deadline.Scripting import *
 
 from datetime import date
+
+import os
+import shutil
+
 ########################################################################
 ## Globals
 ########################################################################
@@ -53,18 +57,17 @@ def __main__():
 	scriptDialog.AddComboControl ( 'ResolutionComboBox' , 'ComboControl', resolutions[1], resolutions, smallControlWidth, -1 )
 	scriptDialog.EndRow()
 	# Codec Popup
-	codecs = ('Animation','H.264','ProRes 422')
+	codecs = ('Animation','H264','ProRes 422')
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'CodecLabel', 'LabelControl', 'Codec', labelWidth, -1 )
 	scriptDialog.AddComboControl ( 'CodecComboBox' , 'ComboControl', codecs[2], codecs, smallControlWidth, -1 )
 	scriptDialog.EndRow()
-	'''
 	# Bitrate Range
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'BitRateLabel', 'LabelControl', 'H.264 Bit Rate', labelWidth, -1 )
 	scriptDialog.AddRangeControl ( 'BitRateRangeBox', 'RangeControl', 8000, 1000, 20000, 0, 1000, fullControlWidth, -1 )
 	scriptDialog.EndRow()
-	'''
+
 	# End Settings group
 	scriptDialog.EndGroupBox( False )
 	
@@ -94,7 +97,7 @@ def __main__():
 	scriptDialog.AddGroupBox( 'GroupBox', 'Other Settings', False )
 	# Slate Checkbox
 	scriptDialog.AddRow()
-	scriptDialog.AddSelectionControl( 'SlateCheckBox', 'CheckBoxControl', False, 'Show slate and frames', dialogWidth-padding, -1 )
+	scriptDialog.AddSelectionControl( 'SlateCheckBox', 'CheckBoxControl', False, 'Show slate and frame numbers', dialogWidth-padding, -1 )
 	scriptDialog.EndRow()
 	# Date Checkbox
 	scriptDialog.AddRow()
@@ -106,7 +109,9 @@ def __main__():
 	
 	# Submit and Cancel buttons
 	scriptDialog.AddRow()
-	scriptDialog.AddControl( 'DummyLabel1', 'LabelControl', '', dialogWidth-232,-1 )
+	aboutButton = scriptDialog.AddControl( 'AboutButton', 'ButtonControl', '?', 20, -1 )
+	aboutButton.ValueModified += AboutButtonPressed
+	scriptDialog.AddControl( 'DummyLabel1', 'LabelControl', '', 20,-1 )
 	cancelButton = scriptDialog.AddControl( 'CancelButton', 'ButtonControl', 'Cancel', 100, -1 )
 	cancelButton.ValueModified += CancelButtonPressed
 	submitButton = scriptDialog.AddControl( 'SubmitButton', 'ButtonControl', 'Submit', 100, -1)
@@ -119,6 +124,10 @@ def __main__():
 ########################################################################
 ## Helper Functions
 ########################################################################
+
+def AboutButtonPressed( *args ):
+	scriptDialog.ShowMessageBox ( "Written by Daniel Harkness, Spinifex Group\n\nGithub:\nhttps://github.com/spinifexgroup-studio/deadline\n\nGithub Script Path:\n/scripts/Jobs/JobCreateQuicktime"  , 'About' )
+
 
 def CancelButtonPressed( *args ):
 	CloseDialog()
@@ -137,8 +146,12 @@ def SubmitButtonPressed( *args ):
 	# bitRate = int( scriptDialog.GetValue( 'BitRateRangeBox' ) )
 	frameRate = int( scriptDialog.GetValue( 'FPSRangeBox' ) )
 	resolution = str( scriptDialog.GetValue( 'ResolutionComboBox' ) )
-	shouldAppendLocation = scriptDialog.GetEnabled ( 'AppendDateCheckBox' )
-	shouldWriteSlate = scriptDialog.GetEnabled ( 'SlateCheckBox' )
+	shouldAppendLocation = scriptDialog.GetValue ( 'AppendDateCheckBox' )
+	shouldWriteSlate = scriptDialog.GetValue ( 'SlateCheckBox' )
+	shouldWriteToSameDir = scriptDialog.GetValue ( 'RadioDirParent' )
+	shouldWriteToParentDir = scriptDialog.GetValue ( 'RadioDirParent' )
+	shouldWriteTo2dWipDir = scriptDialog.GetValue ( 'RadioDir2dWip' )
+	shouldWriteTo3dWipDir = scriptDialog.GetValue ( 'RadioDir3dWip' )
 	scaleAmount = 1.0
 	
 	# Get Scale Res
@@ -148,27 +161,57 @@ def SubmitButtonPressed( *args ):
 		scaleAmount = 0.33
 	elif resolution=='Quarter Resolution':
 		scaleAmount = 0.25
-		
+	
+	'''	
 	# Change codec
 	# codecs = ('Animation','H.264','ProRes 422')
 
 	if codec == 'Animation':
 		codec = 'rle '
-	elif codec == 'H.264':
+	elif codec == 'H264':
 		codec = 'avc1'
 	else:
 		codec = 'apcn' #ProRes 422
-
-	tempFile = GetTempDirectory()+'/scriptingTemp.txt'
-	tempFileHandle = open( tempFile, 'w' )
-	# Debugging
 	'''
-	tempFileHandle.write ( str(codec)+'\n' )
-	tempFileHandle.write ( str(bitRate)+'\n' )
-	tempFileHandle.write ( str(frameRate)+'\n' )
-	tempFileHandle.write ( str(resolution)+'\n' )
-	tempFileHandle.write ( str(scaleAmount)+'\n' )
-	tempFileHandle.write ( '\n' )
+	
+	# Get Nuke App Path	
+	nukePath = ''
+	if IsRunningOnMac():
+		nukePath = '/Applications/Nuke6.3v4/Nuke6.3v4.app/Contents/MacOS/Nuke6.3v4'
+	else:
+		nukePath = 'C:/Program Files/Nuke6.3v1/Nuke6.3.exe'
+	if not FileExists (nukePath):
+		CloseDialog()	
+		scriptDialog.ShowMessageBox ( "Cannot run wihout Nuke 6.3 installed"  , 'Error' )
+		return
+
+	
+	# Get directories
+	pluginDirectory = RepositoryUtils.GetScriptsDirectory() + '/Jobs/JobCreateQuicktime'
+	templateNukeScript = pluginDirectory + '/JobCreateQuicktimeNukeTemplate.nk'
+	nukePythonScript = pluginDirectory + '/ModifyNukeTemplate.py'
+
+	currentUserHomeDirectory = ClientUtils.GetCurrentUserHomeDirectory()
+	currentUserTempDirectory = currentUserHomeDirectory + '/temp'
+
+	# Copy Font for checking Nuke script locally
+	fontPath = pluginDirectory+'/Arial.ttf'
+	try:
+		shutil.copyfile ( fontPath , currentUserTempDirectory+'/Arial.ttf' )
+	except:
+		pass
+
+	# Debugging
+	debugFile = currentUserTempDirectory+'/JobCreateQuicktimeDebug.txt'
+	debugFileHandle = open( debugFile, 'w' )
+	
+	debugFileHandle.write ( str(codec)+'\n' )
+	'''
+	debugFileHandle.write ( str(bitRate)+'\n' )
+	debugFileHandle.write ( str(frameRate)+'\n' )
+	debugFileHandle.write ( str(resolution)+'\n' )
+	debugFileHandle.write ( str(scaleAmount)+'\n' )
+	debugFileHandle.write ( '\n' )
 	'''
 
 	# Iterate through selected jobs
@@ -186,10 +229,42 @@ def SubmitButtonPressed( *args ):
 			moviePath = outputDirectory + "/" + Path.GetFileNameWithoutExtension( outputPath )
 			moviePath = moviePath.replace("_#","").replace(".#","").replace("[#","").replace("#]","").replace("#","")
 			
-			if shouldWriteSlate:
-				moviePath = ToPlatformIndependentPath ( ToPlatformIndependentPath )
+			# Build Directory of writing one level up
+			if shouldWriteToParentDir:
+				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath )
 				moviePathSplit = moviePath.split ('/')
+				newMoviePath = ''
+				for k in range ( 0, len (moviePathSplit) - 2 ):
+					pathItem = moviePathSplit[k]
+					if pathItem != '':
+						newMoviePath = newMoviePath + '/' + pathItem
+				moviePath = newMoviePath + '/' + moviePathSplit[ len(moviePathSplit) - 1 ]
 			
+			# Build Directory if Writing to WIP directories
+			if shouldWriteTo2dWipDir or shouldWriteTo3dWipDir:
+				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath )
+				moviePathSplit = moviePath.split ('/')
+				newMoviePath = ''
+				# Iterate through list till we get to '2_Studio' folder structure
+				for pathItem in moviePathSplit:
+					# Check for null strings - prevents // in path
+					if pathItem != '':
+						newMoviePath = newMoviePath + '/' + pathItem
+						if pathItem == '2_Studio':
+							if shouldWriteTo2dWipDir:
+								newMoviePath = newMoviePath + '/2D/_Renders/WIP'
+							if shouldWriteTo3dWipDir:
+								newMoviePath = newMoviePath + '/3D/Renders/_WIP'
+							# Make a date folder if we are making dated files
+							if shouldAppendLocation:
+								newMoviePath = newMoviePath + '/' + str ( date.today() )
+								if not os.path.exists (newMoviePath):
+									os.mkdir (newMoviePath)
+							# Finish up the path and break		
+							moviePath = newMoviePath + '/' + moviePathSplit[ len(moviePathSplit) - 1 ]
+							break
+			
+			# Append date to file in form _YYYY-MM-DD_VV.mov
 			if shouldAppendLocation:
 				dateString = str ( date.today() )
 				haveFoundDatedFileName = False
@@ -204,12 +279,7 @@ def SubmitButtonPressed( *args ):
 			else:
 				moviePath = moviePath + '.mov'
 			
-			pluginDirectory = RepositoryUtils.GetScriptsDirectory() + '/Jobs/JobCreateQuicktime'
-			templateNukeScript = pluginDirectory + '/JobCreateQuicktimeNukeTemplate.nk'
-
-			currentUserHomeDirectory = ClientUtils.GetCurrentUserHomeDirectory()
-			currentUserTempDirectory = currentUserHomeDirectory + '/temp'
-			submissionNukeScript = currentUserTempDirectory + '/JobCreateQuicktimeNukeSubmissionScript.nk'
+			debugFileHandle.write ( moviePath+'\n' )
 			
 			# Get some information about the job
 			sceneFile = JobUtils.GetDataFilename( i )
@@ -218,17 +288,11 @@ def SubmitButtonPressed( *args ):
 			
 			# Create Nuke Script for submission
 			nukeInputSequence = outputPath
-			nukePath = ''
-			if IsRunningOnMac():
-				nukePath = '/Applications/Nuke6.3v4/Nuke6.3v4.app/Contents/MacOS/Nuke6.3v4'
-			else:
-				nukePath = 'C:/Program Files/Nuke6.3v1/Nuke6.3.exe'
-
-			nukePythonScript = pluginDirectory + '/ModifyNukeTemplate.py'
-			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , nukeInputSequence , moviePath ]
+			submissionNukeScript = currentUserTempDirectory + '/JobCreateQuicktimeNukeSubmissionScript.nk'
+			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , nukeInputSequence , moviePath, fontPath ]
 			for k in range ( 1, len (nukeArgList) ):
 				nukeArgList[k] = '\"' + nukeArgList[k] + '\"'
-			nukeArgList.extend( [ str(firstFrame) , str(lastFrame) , str(scaleAmount) , str(frameRate) , codec, ] )
+			nukeArgList.extend( [ str(firstFrame) , str(lastFrame) , str(scaleAmount) , str(frameRate) , codec, str(shouldWriteSlate) ] )
 			nukeArgs = ' '.join( nukeArgList )
 			nukeProcess = ProcessUtils.SpawnProcess ( nukePath , nukeArgs, currentUserTempDirectory )
 			if not ProcessUtils.WaitForExit ( nukeProcess, 10000 ): # Wait up to ten seconds for script to be made
@@ -239,7 +303,21 @@ def SubmitButtonPressed( *args ):
 			fileHandle = open( jobInfoFile, "w" )
 			fileHandle.write( "Plugin=Nuke\n" )
 			fileHandle.write( "Name=%s [CREATE QUICKTIME]\n" % job.JobName )
-			fileHandle.write( "Comment=Making QT from %s\n" % job.JobName )
+			comment = ''
+			if shouldAppendLocation:
+				comment = comment + 'dated, '
+			if shouldWriteSlate: 
+				comment = comment + 'slated, '
+			if shouldWriteToSameDir:
+				comment = comment + 'in sequence directory'
+			if shouldWriteToParentDir:
+				comment = comment + 'in sequence parent'
+			if shouldWriteTo2dWipDir:
+				comment = comment + 'in 2D WIP'
+			if shouldWriteTo3dWipDir:
+				comment = comment + 'in 3D WIP'
+
+			fileHandle.write( "Comment=%s\n" % comment )
 			fileHandle.write( "Department=%s\n" % "Pure Awesome" )
 			fileHandle.write( "Pool=%s\n" % "2d_nuke_qt" )
 			fileHandle.write( "Group=%s\n" % "2d_mac" )
@@ -258,35 +336,27 @@ def SubmitButtonPressed( *args ):
 			fileHandle.write( "Version=%s.%s\n" % (6, 3) )
 			fileHandle.close()
 
-			submitString = ClientUtils.ExecuteCommandAndGetOutput ( ( jobInfoFile , pluginInfoFile , submissionNukeScript) )
+			submitString = ClientUtils.ExecuteCommandAndGetOutput ( ( jobInfoFile , pluginInfoFile , submissionNukeScript ) )
 			submitResultsString = submitResultsString+submitString+'\n'
+			
+			
 			# Debugging
 			'''
-			tempFileHandle.write ( str(job.JobName)+'\n' )
-			tempFileHandle.write ( str(job.JobPriority)+'\n' )
-			tempFileHandle.write ( str(sceneFile)+'\n' )
-			tempFileHandle.write ( str(firstFrame)+'\n' )
-			tempFileHandle.write ( str(lastFrame)+'\n' )
-			tempFileHandle.write ( str(outputDirectory)+'\n' )
-			tempFileHandle.write ( str(outputFilename)+'\n' )
-			tempFileHandle.write ( str(outputPath)+'\n' )
-			tempFileHandle.write ( str(job.JobComment)+'\n' )
-			tempFileHandle.write ( str(job.JobUserName)+'\n' )
-			tempFileHandle.write ( str(templateNukeScript)+'\n' )
-			tempFileHandle.write ( str(submissionNukeScript)+'\n' )			
-			tempFileHandle.write ( str(nukePath+' '+nukePythonScript+' '+nukeArgs)+'\n' )			
-			tempFileHandle.write ( '\n' )
+			debugFileHandle.write ( str(shouldWriteTo2dWipDir)+'\n' )			
+			debugFileHandle.write ( str(shouldWriteTo3dWipDir)+'\n' )			
+			debugFileHandle.write ( str(moviePathSplit)+'\n' )		
+			'''	
+			debugFileHandle.write ( '\n' )
 			
-			'''
 		
-	tempFileHandle.close()
+		
+	debugFileHandle.close()
 	CloseDialog()
-	scriptDialog.ShowMessageBox ( submitResultsString , 'Result' )
+	scriptDialog.ShowMessageBox ( submitResultsString , 'Results of Submission' )
 
 
 def CloseDialog():
 	global scriptDialog
-	
 	scriptDialog.CloseDialog()
 	
 
