@@ -4,24 +4,30 @@ define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
 <layout version="1.0">
     <window x="0" y="0" w="2560" h="1440" fullscreen="1" screen="0">
         <splitter orientation="1">
-            <split size="690"/>
-            <splitter orientation="1">
-                <split size="690"/>
-                <dock id="" hideTitles="1" activePageId="Script Editor.2">
-                    <page id="Script Editor.2"/>
-                </dock>
-            </splitter>
-            <split size="1866"/>
-            <splitter orientation="2">
-                <split size="718"/>
-                <dock id="" hideTitles="1" activePageId="Viewer.1">
-                    <page id="Viewer.1"/>
-                </dock>
-                <split size="718"/>
-                <dock id="" hideTitles="1" activePageId="DAG.1">
-                    <page id="DAG.1"/>
-                </dock>
-            </splitter>
+            <split size="43"/>
+            <dock id="" activePageId="Toolbar.1">
+                <page id="Toolbar.1"/>
+            </dock>
+            <split size="2002"/>
+            <dock id="" activePageId="DAG.1">
+                <page id="DAG.1"/>
+                <page id="Curve Editor.1"/>
+                <page id="DopeSheet.1"/>
+                <page id="Script Editor.1"/>
+                <page id="Error Console.1"/>
+            </dock>
+            <split size="507"/>
+            <dock id="" activePageId="Properties.1">
+                <page id="Properties.1"/>
+            </dock>
+        </splitter>
+    </window>
+    <window x="2560" y="0" w="1920" h="1200" fullscreen="1" screen="2">
+        <splitter orientation="2">
+            <split size="1200"/>
+            <dock id="" activePageId="Viewer.1">
+                <page id="Viewer.1"/>
+            </dock>
         </splitter>
     </window>
 </layout>
@@ -36,45 +42,40 @@ Root {
 }
 Read {
  inputs 0
- file /Volumes/RESOURCES/05_Motion_Studio_Tools/development/deadline/scripts/Jobs/JobCreateQuicktime/readNodeProxy.jpg
+ file ./readNodeProxy.jpg
  format "1920 1080 0 0 1920 1080 1 HD"
  origset true
  name inputSequence
  xpos -810
- ypos -902
+ ypos -814
 }
-Dot {
- name Dot1
- xpos -782
- ypos -732
-}
-set N56ad200 [stack 0]
+set N81e5a80 [stack 0]
 Dot {
  name Dot2
- xpos -12
- ypos -732
+ xpos -616
+ ypos -788
 }
-set N1432ce60 [stack 0]
+set N81e7f00 [stack 0]
 Dot {
  name Dot4
- xpos 318
- ypos -732
+ xpos -452
+ ypos -788
 }
 Blur {
- size 100
+ size 50
  name Blur1
- xpos 290
- ypos -675
+ xpos -480
+ ypos -758
 }
 Grade {
  multiply 0.075
  white_clamp true
  name Grade1
- xpos 290
- ypos -641
+ xpos -480
+ ypos -724
 }
 Text {
- message "Frames:\n\nDate:\n\nSequence Directory:"
+ message "Frames\n\nFPS\n\nDate\n\nSequence Directory"
  font ./Arial.ttf
  size {{height/25 i}}
  leading 0.2
@@ -84,12 +85,12 @@ Text {
  box {{width/20 i} {height/10 i} {width/3-width/100 i} {height-height/10 i x40 579}}
  center {1024 1024}
  color {0.6200000048 0.6200000048 0.6200000048 1}
- name columnLeft
- xpos 290
- ypos -513
+ name slateTextLeft
+ xpos -480
+ ypos -700
 }
 Text {
- message "\[value inputSequence.first]-\[value inputSequence.last]\n\n\[date]\n\n\[value inputSequence.file]"
+ message "\[value inputSequence.first]-\[value inputSequence.last]\n\n\[value root.fps]\n\n\[date]\n\n\[value inputSequence.file]"
  font ./Arial.ttf
  size {{height/25 i}}
  leading 0.2
@@ -97,17 +98,9 @@ Text {
  Transform 1
  box {{width/3 i} {height/10 i} {width-width/20 i} {height-height/10 i x40 579}}
  center {1024 1024}
- name columnRight
- xpos 290
- ypos -489
-}
-push $N1432ce60
-Switch {
- inputs 2
- which {{"inrange(frame, \[value inputSequence.first], \[value inputSequence.first])" i}}
- name Switch2
- xpos -40
- ypos -288
+ name slateTextRight
+ xpos -480
+ ypos -676
 }
 Text {
  message "Spinifex Group"
@@ -119,10 +112,32 @@ Text {
  Transform 1
  box {{width/20 i} {height/20 i} {width-width/20 i} {height/3 i x40 579}}
  color {0 0.18 0 0.18}
- name logo
- xpos -40
- ypos -242
+ name logoText1
+ xpos -480
+ ypos -652
 }
+push $N81e7f00
+Switch {
+ inputs 2
+ which {{"inrange(frame, \[value inputSequence.first], \[value inputSequence.first])"}}
+ name switchFirstFrame
+ xpos -644
+ ypos -652
+}
+set N17a26b90 [stack 0]
+push $N81e5a80
+Switch {
+ inputs 2
+ name switchSlate
+ xpos -810
+ ypos -652
+}
+Dot {
+ name Dot1
+ xpos -782
+ ypos -588
+}
+set N17a2f330 [stack 0]
 Reformat {
  type "to box"
  box_width {{width}}
@@ -130,49 +145,57 @@ Reformat {
  box_fixed true
  black_outside true
  name Reformat1
- xpos -40
- ypos -109
+ xpos -641
+ ypos -585
 }
 Text {
  font ./Arial.ttf
- size {{height/25 i}}
+ size {{height/20 i x2 46.3292549}}
  yjustify bottom
  Transform 1
  box {{width/100 i} {(height/1.2)/100 i} {width-width/100 i} {(height/1.2)/10-(height/1.2)/100 i}}
- name bottomText
- xpos -40
- ypos -81
+ name footerTextLeft
+ xpos -641
+ ypos -561
+}
+Text {
+ message "Spinifex Group"
+ font ./Arial.ttf
+ size {{height/20 i}}
+ xjustify right
+ yjustify bottom
+ Transform 1
+ box {{width/100 i} {(height/1.2)/100 i} {width-width/100 i} {(height/1.2)/10-(height/1.2)/100 i}}
+ color {0 0.1899999976 0 1}
+ name footerTextRight
+ xpos -641
+ ypos -537
+ disable {{"inrange(frame, \[value inputSequence.first], \[value inputSequence.first])" i K x2 0}}
 }
 Text {
  message "\[value root.name]"
  font ./Arial.ttf
- size {{height/35 i}}
+ size {{height/30 i}}
  yjustify top
  Transform 1
  box {{width/100 i} {height-(height/1.2)/10 i} {width-width/100 i} {height-(height/1.2)/100 i}}
- name topText
- xpos -40
- ypos -57
+ name headerTextLeft
+ xpos -641
+ ypos -513
 }
-set Ncc94c60 [stack 0]
-Dot {
- name Dot3
- xpos -12
- ypos 15
-}
-push $N56ad200
+push $N17a2f330
 Switch {
  inputs 2
- name slateSwitch
+ name switchFrames
  xpos -810
- ypos 18
+ ypos -513
 }
 Reformat {
  type scale
  resize fit
  name scaleDown
  xpos -810
- ypos 77
+ ypos -448
 }
 Write {
  file destination.mov
@@ -184,12 +207,12 @@ Write {
  checkHashOnRead false
  name outputMovie
  xpos -810
- ypos 130
+ ypos -424
 }
-push $Ncc94c60
+push $N17a26b90
 Viewer {
  input_process false
  name Viewer1
- xpos -118
- ypos 145
+ xpos -333
+ ypos -441
 }

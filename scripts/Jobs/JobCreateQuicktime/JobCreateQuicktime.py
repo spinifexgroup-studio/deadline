@@ -7,6 +7,7 @@ from datetime import date
 
 import os
 import shutil
+import ConfigParser
 
 ########################################################################
 ## Globals
@@ -23,7 +24,7 @@ def __main__():
 	global settings
 	
 	dialogWidth = 250
-	dialogHeight = 400
+	dialogHeight = 430
 	labelWidth = 100
 	tabHeight = 600
 	padding = 24
@@ -57,16 +58,18 @@ def __main__():
 	scriptDialog.AddComboControl ( 'ResolutionComboBox' , 'ComboControl', resolutions[1], resolutions, smallControlWidth, -1 )
 	scriptDialog.EndRow()
 	# Codec Popup
-	codecs = ('Animation','H264','ProRes 422')
+	codecs = ('Animation','H.264','ProRes 422')
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'CodecLabel', 'LabelControl', 'Codec', labelWidth, -1 )
 	scriptDialog.AddComboControl ( 'CodecComboBox' , 'ComboControl', codecs[2], codecs, smallControlWidth, -1 )
 	scriptDialog.EndRow()
+	'''
 	# Bitrate Range
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'BitRateLabel', 'LabelControl', 'H.264 Bit Rate', labelWidth, -1 )
 	scriptDialog.AddRangeControl ( 'BitRateRangeBox', 'RangeControl', 8000, 1000, 20000, 0, 1000, fullControlWidth, -1 )
 	scriptDialog.EndRow()
+	'''
 
 	# End Settings group
 	scriptDialog.EndGroupBox( False )
@@ -97,7 +100,11 @@ def __main__():
 	scriptDialog.AddGroupBox( 'GroupBox', 'Other Settings', False )
 	# Slate Checkbox
 	scriptDialog.AddRow()
-	scriptDialog.AddSelectionControl( 'SlateCheckBox', 'CheckBoxControl', False, 'Show slate and frame numbers', dialogWidth-padding, -1 )
+	scriptDialog.AddSelectionControl( 'SlateCheckBox', 'CheckBoxControl', False, 'Show slate on first frame', dialogWidth-padding, -1 )
+	scriptDialog.EndRow()
+	# Frames Checkbox
+	scriptDialog.AddRow()
+	scriptDialog.AddSelectionControl( 'FramesCheckBox', 'CheckBoxControl', False, 'Show frame numbers', dialogWidth-padding, -1 )
 	scriptDialog.EndRow()
 	# Date Checkbox
 	scriptDialog.AddRow()
@@ -118,11 +125,113 @@ def __main__():
 	submitButton.ValueModified += SubmitButtonPressed
 	scriptDialog.EndRow()
 	
+	# Read in config File
+	configFile = ClientUtils.GetCurrentUserHomeDirectory() + "/settings/JobCreateQuicktimeSettings.ini"
+	ReadStickySettings( scriptDialog, configFile )
+	
 	scriptDialog.ShowDialog( False )
 
 
 ########################################################################
 ## Helper Functions
+########################################################################
+
+def CloseDialog():
+	global scriptDialog
+	scriptDialog.CloseDialog()
+
+
+def ReadStickySettings( dialog, configFile ):
+	if FileExists( configFile ):
+		config = ConfigParser.ConfigParser()
+		config.read( configFile )
+		if config.has_section( 'Sticky' ):
+			dialogControl = 'CodecComboBox'
+			if config.has_option( 'Sticky', dialogControl ):
+				configValue = config.get( 'Sticky', dialogControl )
+				dialog.SetValue( dialogControl, configValue )
+			dialogControl = 'FPSRangeBox'
+			if config.has_option( 'Sticky', dialogControl ):
+				configValue = config.get( 'Sticky', dialogControl )
+				dialog.SetValue( dialogControl, configValue )
+			dialogControl = 'ResolutionComboBox'
+			if config.has_option( 'Sticky', dialogControl ):
+				configValue = config.get( 'Sticky', dialogControl )
+				dialog.SetValue( dialogControl, configValue )
+			dialogControl = 'AppendDateCheckBox'
+			if config.has_option( 'Sticky', dialogControl ):
+				configValue = config.get( 'Sticky', dialogControl )
+				if configValue == 'True':
+					dialog.SetValue( dialogControl, True )
+				else:
+					dialog.SetValue( dialogControl, False )
+			dialogControl = 'SlateCheckBox'
+			if config.has_option( 'Sticky', dialogControl ):
+				configValue = config.get( 'Sticky', dialogControl )
+				if configValue == 'True':
+					dialog.SetValue( dialogControl, True )
+				else:
+					dialog.SetValue( dialogControl, False )
+			dialogControl = 'FramesCheckBox'
+			if config.has_option( 'Sticky', dialogControl ):
+				configValue = config.get( 'Sticky', dialogControl )
+				if configValue == 'True':
+					dialog.SetValue( dialogControl, True )
+				else:
+					dialog.SetValue( dialogControl, False )
+			dialogControl = 'RadioDirSame'
+			if config.has_option( 'Sticky', dialogControl ):
+				configValue = config.get( 'Sticky', dialogControl )
+				if configValue == 'True':
+					dialog.SetValue( dialogControl, True )
+				else:
+					dialog.SetValue( dialogControl, False )
+			dialogControl = 'RadioDirParent'
+			if config.has_option( 'Sticky', dialogControl ):
+				configValue = config.get( 'Sticky', dialogControl )
+				if configValue == 'True':
+					dialog.SetValue( dialogControl, True )
+				else:
+					dialog.SetValue( dialogControl, False )
+			dialogControl = 'RadioDir2dWip'
+			if config.has_option( 'Sticky', dialogControl ):
+				configValue = config.get( 'Sticky', dialogControl )
+				if configValue == 'True':
+					dialog.SetValue( dialogControl, True )
+				else:
+					dialog.SetValue( dialogControl, False )
+				
+			dialogControl = 'RadioDir3dWip'
+			if config.has_option( 'Sticky', dialogControl ):
+				configValue = config.get( 'Sticky', dialogControl )
+				if configValue == 'True':
+					dialog.SetValue( dialogControl, True )
+				else:
+					dialog.SetValue( dialogControl, False )
+
+
+def WriteStickySettings( dialog, configFile ):
+	config = ConfigParser.ConfigParser()
+	config.add_section( "Sticky" )
+	
+	config.set( "Sticky", "CodecComboBox", dialog.GetValue( 'CodecComboBox' ) )
+	config.set( "Sticky", "FPSRangeBox", dialog.GetValue( 'FPSRangeBox' ) )
+	config.set( "Sticky", "ResolutionComboBox", dialog.GetValue( 'ResolutionComboBox' ) )
+	config.set( "Sticky", "AppendDateCheckBox", dialog.GetValue( 'AppendDateCheckBox' ) )
+	config.set( "Sticky", "SlateCheckBox", dialog.GetValue( 'SlateCheckBox' ) )
+	config.set( "Sticky", "FramesCheckBox", dialog.GetValue( 'FramesCheckBox' ) )
+	config.set( "Sticky", "RadioDirSame", dialog.GetValue( 'RadioDirSame' ) )
+	config.set( "Sticky", "RadioDirParent", dialog.GetValue( 'RadioDirParent' ) )
+	config.set( "Sticky", "RadioDir2dWip", dialog.GetValue( 'RadioDir2dWip' ) )
+	config.set( "Sticky", "RadioDir3dWip", dialog.GetValue( 'RadioDir3dWip' ) )
+	
+	fileHandle = open( configFile, "w" )
+	config.write( fileHandle )
+	fileHandle.close()
+	
+
+########################################################################
+## Button Functions
 ########################################################################
 
 def AboutButtonPressed( *args ):
@@ -148,7 +257,8 @@ def SubmitButtonPressed( *args ):
 	resolution = str( scriptDialog.GetValue( 'ResolutionComboBox' ) )
 	shouldAppendLocation = scriptDialog.GetValue ( 'AppendDateCheckBox' )
 	shouldWriteSlate = scriptDialog.GetValue ( 'SlateCheckBox' )
-	shouldWriteToSameDir = scriptDialog.GetValue ( 'RadioDirParent' )
+	shouldWriteFrames = scriptDialog.GetValue ( 'FramesCheckBox' )
+	shouldWriteToSameDir = scriptDialog.GetValue ( 'RadioDirSame' )
 	shouldWriteToParentDir = scriptDialog.GetValue ( 'RadioDirParent' )
 	shouldWriteTo2dWipDir = scriptDialog.GetValue ( 'RadioDir2dWip' )
 	shouldWriteTo3dWipDir = scriptDialog.GetValue ( 'RadioDir3dWip' )
@@ -168,7 +278,7 @@ def SubmitButtonPressed( *args ):
 
 	if codec == 'Animation':
 		codec = 'rle '
-	elif codec == 'H264':
+	elif codec == 'H.264':
 		codec = 'avc1'
 	else:
 		codec = 'apcn' #ProRes 422
@@ -179,7 +289,9 @@ def SubmitButtonPressed( *args ):
 	if IsRunningOnMac():
 		nukePath = '/Applications/Nuke6.3v4/Nuke6.3v4.app/Contents/MacOS/Nuke6.3v4'
 	else:
-		nukePath = 'C:/Program Files/Nuke6.3v1/Nuke6.3.exe'
+		nukePath = 'C:/Program Files/Nuke6.3v4/Nuke6.3.exe'
+		if not FileExists (nukePath):
+			nukePath = 'C:/Program Files/Nuke6.3v1/Nuke6.3.exe'
 	if not FileExists (nukePath):
 		CloseDialog()	
 		scriptDialog.ShowMessageBox ( "Cannot run wihout Nuke 6.3 installed"  , 'Error' )
@@ -193,7 +305,7 @@ def SubmitButtonPressed( *args ):
 
 	currentUserHomeDirectory = ClientUtils.GetCurrentUserHomeDirectory()
 	currentUserTempDirectory = currentUserHomeDirectory + '/temp'
-
+		
 	# Copy Font for checking Nuke script locally
 	fontPath = pluginDirectory+'/Arial.ttf'
 	try:
@@ -257,7 +369,9 @@ def SubmitButtonPressed( *args ):
 								newMoviePath = newMoviePath + '/3D/Renders/_WIP'
 							# Make a date folder if we are making dated files
 							if shouldAppendLocation:
-								newMoviePath = newMoviePath + '/' + str ( date.today() )
+								# ISO date no dashes
+								dateString = str(date.today() ).replace('-','')
+								newMoviePath = newMoviePath + '/' + dateString
 								if not os.path.exists (newMoviePath):
 									os.mkdir (newMoviePath)
 							# Finish up the path and break		
@@ -266,7 +380,7 @@ def SubmitButtonPressed( *args ):
 			
 			# Append date to file in form _YYYY-MM-DD_VV.mov
 			if shouldAppendLocation:
-				dateString = str ( date.today() )
+				dateString = str ( date.today() ).replace('-','')
 				haveFoundDatedFileName = False
 				k = 1
 				while not haveFoundDatedFileName:
@@ -289,10 +403,10 @@ def SubmitButtonPressed( *args ):
 			# Create Nuke Script for submission
 			nukeInputSequence = outputPath
 			submissionNukeScript = currentUserTempDirectory + '/JobCreateQuicktimeNukeSubmissionScript.nk'
-			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , nukeInputSequence , moviePath, fontPath ]
+			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , nukeInputSequence , moviePath, fontPath, codec ]
 			for k in range ( 1, len (nukeArgList) ):
 				nukeArgList[k] = '\"' + nukeArgList[k] + '\"'
-			nukeArgList.extend( [ str(firstFrame) , str(lastFrame) , str(scaleAmount) , str(frameRate) , codec, str(shouldWriteSlate) ] )
+			nukeArgList.extend( [ str(firstFrame) , str(lastFrame) , str(scaleAmount) , str(frameRate), str(shouldWriteSlate), str(shouldWriteFrames) ] )
 			nukeArgs = ' '.join( nukeArgList )
 			nukeProcess = ProcessUtils.SpawnProcess ( nukePath , nukeArgs, currentUserTempDirectory )
 			if not ProcessUtils.WaitForExit ( nukeProcess, 10000 ): # Wait up to ten seconds for script to be made
@@ -326,6 +440,7 @@ def SubmitButtonPressed( *args ):
 			fileHandle.write( "ConcurrentTasks=1\n" )
 			fileHandle.write( "Frames=%s\n" % str(job.JobFrames) )
 			fileHandle.write( "ChunkSize=100000\n")
+			
 			if job.JobStatus != 'Completed':
 				fileHandle.write( "JobDependencies=%s\n" % job.JobId )
 			fileHandle.close()
@@ -341,23 +456,19 @@ def SubmitButtonPressed( *args ):
 			
 			
 			# Debugging
-			'''
-			debugFileHandle.write ( str(shouldWriteTo2dWipDir)+'\n' )			
-			debugFileHandle.write ( str(shouldWriteTo3dWipDir)+'\n' )			
-			debugFileHandle.write ( str(moviePathSplit)+'\n' )		
-			'''	
+			
+			debugFileHandle.write ( str(shouldWriteSlate)+'\n' )			
+			debugFileHandle.write ( str(shouldWriteFrames)+'\n' )			
+			debugFileHandle.write ( str(nukeArgs)+'\n' )		
+			
 			debugFileHandle.write ( '\n' )
 			
 		
 		
 	debugFileHandle.close()
+	configFile = currentUserHomeDirectory + "/settings/JobCreateQuicktimeSettings.ini"
+	WriteStickySettings( scriptDialog, configFile )
 	CloseDialog()
 	scriptDialog.ShowMessageBox ( submitResultsString , 'Results of Submission' )
-
-
-def CloseDialog():
-	global scriptDialog
-	scriptDialog.CloseDialog()
-	
 
 	
