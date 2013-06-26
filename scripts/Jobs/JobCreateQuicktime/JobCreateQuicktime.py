@@ -1,3 +1,12 @@
+'''
+Create a quicktime from deadline monitor - uses nuke to do the job
+TODO:
+- fix 2.15GB bug
+- eat some poo
+- make correctly cross platform
+'''
+
+
 from System.IO import *
 from System.Text import *
 
@@ -12,8 +21,10 @@ import ConfigParser
 ########################################################################
 ## Globals
 ########################################################################
+
 scriptDialog = None
 settings = None
+
 
 ########################################################################
 ## Main Function Called By Deadline
@@ -32,7 +43,6 @@ def __main__():
 	fullControlWidth = dialogWidth-labelWidth-padding
 	
 	scriptDialog = DeadlineScriptEngine.GetScriptDialog()
-	
 	scriptDialog.SetSize( dialogWidth+padding, dialogHeight )
 	scriptDialog.SetTitle( 'Create Quicktime' )
 	
@@ -136,11 +146,6 @@ def __main__():
 ## Helper Functions
 ########################################################################
 
-def CloseDialog():
-	global scriptDialog
-	scriptDialog.CloseDialog()
-
-
 def ReadStickySettings( dialog, configFile ):
 	if FileExists( configFile ):
 		config = ConfigParser.ConfigParser()
@@ -229,6 +234,18 @@ def WriteStickySettings( dialog, configFile ):
 	config.write( fileHandle )
 	fileHandle.close()
 	
+	
+def GetScaleAmount ( resolution ):
+	scaleAmount = 1.0
+	if resolution=='Half Resolution':
+		scaleAmount = 0.5
+	elif resolution=='Third Resolution':
+		scaleAmount = 0.33
+	elif resolution=='Quarter Resolution':
+		scaleAmount = 0.25
+	return scaleAmount		
+	
+	
 
 ########################################################################
 ## Button Functions
@@ -239,7 +256,7 @@ def AboutButtonPressed( *args ):
 
 
 def CancelButtonPressed( *args ):
-	CloseDialog()
+	scriptDialog.CloseDialog()
 
 
 def SubmitButtonPressed( *args ):
@@ -262,28 +279,10 @@ def SubmitButtonPressed( *args ):
 	shouldWriteToParentDir = scriptDialog.GetValue ( 'RadioDirParent' )
 	shouldWriteTo2dWipDir = scriptDialog.GetValue ( 'RadioDir2dWip' )
 	shouldWriteTo3dWipDir = scriptDialog.GetValue ( 'RadioDir3dWip' )
-	scaleAmount = 1.0
 	
-	# Get Scale Res
-	if resolution=='Half Resolution':
-		scaleAmount = 0.5
-	elif resolution=='Third Resolution':
-		scaleAmount = 0.33
-	elif resolution=='Quarter Resolution':
-		scaleAmount = 0.25
-	
-	'''	
-	# Change codec
-	# codecs = ('Animation','H.264','ProRes 422')
-
-	if codec == 'Animation':
-		codec = 'rle '
-	elif codec == 'H.264':
-		codec = 'avc1'
-	else:
-		codec = 'apcn' #ProRes 422
-	'''
-	
+	# Get Scale Factor
+	scaleAmount = GetScaleAmount ( resolution )
+		
 	# Get Nuke App Path	
 	nukePath = ''
 	if IsRunningOnMac():
@@ -297,7 +296,6 @@ def SubmitButtonPressed( *args ):
 		scriptDialog.ShowMessageBox ( "Cannot run wihout Nuke 6.3 installed"  , 'Error' )
 		return
 
-	
 	# Get directories
 	pluginDirectory = RepositoryUtils.GetScriptsDirectory() + '/Jobs/JobCreateQuicktime'
 	templateNukeScript = pluginDirectory + '/JobCreateQuicktimeNukeTemplate.nk'
@@ -354,7 +352,7 @@ def SubmitButtonPressed( *args ):
 			
 			# Build Directory if Writing to WIP directories
 			if shouldWriteTo2dWipDir or shouldWriteTo3dWipDir:
-				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath )
+				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath ).replace('\\','/')
 				moviePathSplit = moviePath.split ('/')
 				newMoviePath = ''
 				# Iterate through list till we get to '2_Studio' folder structure
@@ -403,6 +401,14 @@ def SubmitButtonPressed( *args ):
 			# Create Nuke Script for submission
 			nukeInputSequence = outputPath
 			submissionNukeScript = currentUserTempDirectory + '/JobCreateQuicktimeNukeSubmissionScript.nk'
+			
+			nukePythonScript = PathUtils.ToPlatformIndependentPath ( nukePythonScript ).replace('\\','/').replace('//Volumes','/Volumes')
+			templateNukeScript = PathUtils.ToPlatformIndependentPath ( templateNukeScript ).replace('\\','/').replace('//Volumes','/Volumes')
+			submissionNukeScript = PathUtils.ToPlatformIndependentPath ( submissionNukeScript ).replace('\\','/').replace('//Volumes','/Volumes')
+			nukeInputSequence = PathUtils.ToPlatformIndependentPath ( nukeInputSequence ).replace('\\','/').replace('//Volumes','/Volumes')
+			moviePath = PathUtils.ToPlatformIndependentPath ( moviePath ).replace('\\','/').replace('//Volumes','/Volumes')
+			fontPath = PathUtils.ToPlatformIndependentPath ( fontPath ).replace('\\','/').replace('//Volumes','/Volumes')
+			
 			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , nukeInputSequence , moviePath, fontPath, codec ]
 			for k in range ( 1, len (nukeArgList) ):
 				nukeArgList[k] = '\"' + nukeArgList[k] + '\"'
@@ -468,7 +474,7 @@ def SubmitButtonPressed( *args ):
 	debugFileHandle.close()
 	configFile = currentUserHomeDirectory + "/settings/JobCreateQuicktimeSettings.ini"
 	WriteStickySettings( scriptDialog, configFile )
-	CloseDialog()
+	scriptDialog.CloseDialog()
 	scriptDialog.ShowMessageBox ( submitResultsString , 'Results of Submission' )
 
 	
