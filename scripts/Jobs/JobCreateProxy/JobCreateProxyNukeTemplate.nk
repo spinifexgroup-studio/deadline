@@ -1,0 +1,129 @@
+#! /Applications/Nuke6.3v4/NukeX6.3v4.app/../Nuke6.3v4.app/Contents/MacOS/Nuke6.3v4 -nx
+version 6.3 v4
+define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
+<layout version="1.0">
+    <window x="0" y="0" w="2560" h="1440" fullscreen="1" screen="0">
+        <splitter orientation="1">
+            <split size="733"/>
+            <splitter orientation="1">
+                <split size="733"/>
+                <dock id="" hideTitles="1" activePageId="Script Editor.2">
+                    <page id="Script Editor.2"/>
+                </dock>
+            </splitter>
+            <split size="1823"/>
+            <splitter orientation="2">
+                <split size="718"/>
+                <dock id="" hideTitles="1" activePageId="Viewer.1">
+                    <page id="Viewer.1"/>
+                </dock>
+                <split size="718"/>
+                <dock id="" hideTitles="1" activePageId="DAG.1">
+                    <page id="DAG.1"/>
+                </dock>
+            </splitter>
+        </splitter>
+    </window>
+</layout>
+}
+Root {
+ inputs 0
+ name /Volumes/RESOURCES/05_Motion_Studio_Tools/development/deadline/scripts/Jobs/JobCreateProxy/JobCreateProxyNukeTemplate.nk
+ project_directory "\[python \{nuke.script_directory()\}]"
+ format "2048 1556 0 0 2048 1556 1 2K_Super_35(full-ap)"
+ proxy_type scale
+ proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+}
+Read {
+ inputs 0
+ file ./readNodeProxy.jpg
+ format "1920 1080 0 0 1920 1080 1 HD"
+ origset true
+ version 1
+ auto_alpha true
+ name inputSequence
+ xpos -810
+ ypos -643
+}
+Reformat {
+ type scale
+ resize fit
+ name scaleDown
+ xpos -810
+ ypos -561
+}
+Dot {
+ name Dot1
+ xpos -782
+ ypos -444
+}
+set N9cf4b40 [stack 0]
+Unpremult {
+ name Unpremult1
+ xpos -590
+ ypos -321
+}
+set N1ed00820 [stack 0]
+Viewer {
+ input_process false
+ name Viewer1
+ xpos -333
+ ypos -441
+}
+push $N9cf4b40
+Write {
+ file destination.jpg
+ file_type jpeg
+ _jpeg_quality 0.9
+ _jpeg_sub_sampling 4:4:4
+ checkHashOnRead false
+ name outputJPG
+ xpos -1030
+ ypos -302
+ disable true
+}
+push $N9cf4b40
+Write {
+ channels rgba
+ file destination.exr
+ file_type exr
+ name outputEXR
+ xpos -810
+ ypos -206
+ disable true
+}
+push $N1ed00820
+Write {
+ channels rgba
+ file destination.tga
+ file_type targa
+ checkHashOnRead false
+ name outputTGA
+ xpos -590
+ ypos -297
+ disable true
+}
+push $N9cf4b40
+Write {
+ file destination.mov
+ file_type mov
+ codec ap4h
+ fps 30
+ keyframerate 0
+ settings 000000000000000000000000000001cc7365616e000000010000000100000000000001b876696465000000010000000f00000000000000227370746c00000001000000000000000061703468000000000020000003ff000000207470726c00000001000000000000000000000000001e000000000000000000246472617400000001000000000000000000000000000000530000010000000100000000156d70736f00000001000000000000000000000000186d66726100000001000000000000000000000000000000187073667200000001000000000000000000000000000000156266726100000001000000000000000000000000166d70657300000001000000000000000000000000002868617264000000010000000000000000000000000000000000000000000000000000000000000016656e647300000001000000000000000000000000001663666c67000000010000000000000000004400000018636d66720000000100000000000000006170706c00000014636c75740000000100000000000000000000003263646563000000010000000000000000696370746e636c63000200020002010000000001000000010001000000010000001c766572730000000100000000000000000003001c00010000
+ checkHashOnRead false
+ name outputProRes
+ xpos -480
+ ypos -446
+ disable true
+}
+push $N9cf4b40
+Write {
+ channels rgba
+ file destination
+ name outputSameAsInput
+ selected true
+ xpos -1140
+ ypos -446
+ disable true
+}
