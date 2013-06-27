@@ -3,7 +3,7 @@ Create a quicktime from deadline monitor - uses nuke to do the job
 TODO:
 - fix 2.15GB bug
 - eat some poo
-- make correctly cross platform
+- add status bar when submitting
 '''
 
 
@@ -341,7 +341,7 @@ def SubmitButtonPressed( *args ):
 			
 			# Build Directory of writing one level up
 			if shouldWriteToParentDir:
-				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath )
+				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath ).replace('\\','/')
 				moviePathSplit = moviePath.split ('/')
 				newMoviePath = ''
 				for k in range ( 0, len (moviePathSplit) - 2 ):
@@ -352,7 +352,7 @@ def SubmitButtonPressed( *args ):
 			
 			# Build Directory if Writing to WIP directories
 			if shouldWriteTo2dWipDir or shouldWriteTo3dWipDir:
-				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath ).replace('\\','/')
+				moviePath = RepositoryUtils.CheckPathMapping( moviePath , True )
 				moviePathSplit = moviePath.split ('/')
 				newMoviePath = ''
 				# Iterate through list till we get to '2_Studio' folder structure
@@ -402,12 +402,12 @@ def SubmitButtonPressed( *args ):
 			nukeInputSequence = outputPath
 			submissionNukeScript = currentUserTempDirectory + '/JobCreateQuicktimeNukeSubmissionScript.nk'
 			
-			nukePythonScript = PathUtils.ToPlatformIndependentPath ( nukePythonScript ).replace('\\','/').replace('//Volumes','/Volumes')
-			templateNukeScript = PathUtils.ToPlatformIndependentPath ( templateNukeScript ).replace('\\','/').replace('//Volumes','/Volumes')
-			submissionNukeScript = PathUtils.ToPlatformIndependentPath ( submissionNukeScript ).replace('\\','/').replace('//Volumes','/Volumes')
-			nukeInputSequence = PathUtils.ToPlatformIndependentPath ( nukeInputSequence ).replace('\\','/').replace('//Volumes','/Volumes')
-			moviePath = PathUtils.ToPlatformIndependentPath ( moviePath ).replace('\\','/').replace('//Volumes','/Volumes')
-			fontPath = PathUtils.ToPlatformIndependentPath ( fontPath ).replace('\\','/').replace('//Volumes','/Volumes')
+			nukePythonScript = RepositoryUtils.CheckPathMapping ( nukePythonScript, True ).replace('\\','/')
+			templateNukeScript = RepositoryUtils.CheckPathMapping ( templateNukeScript, True ).replace('\\','/')
+			submissionNukeScript = RepositoryUtils.CheckPathMapping ( submissionNukeScript, True ).replace('\\','/')
+			nukeInputSequence = RepositoryUtils.CheckPathMapping ( nukeInputSequence, True ).replace('\\','/')
+			moviePath = RepositoryUtils.CheckPathMapping ( moviePath, True ).replace('\\','/')
+			fontPath = RepositoryUtils.CheckPathMapping ( fontPath, True ).replace('\\','/')
 			
 			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , nukeInputSequence , moviePath, fontPath, codec ]
 			for k in range ( 1, len (nukeArgList) ):
