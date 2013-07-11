@@ -1,0 +1,219 @@
+#! /Applications/Nuke6.3v4/NukeX6.3v4.app/../Nuke6.3v4.app/Contents/MacOS/Nuke6.3v4 -nx
+version 6.3 v4
+define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
+<layout version="1.0">
+    <window x="0" y="0" w="2560" h="1440" fullscreen="1" screen="0">
+        <splitter orientation="1">
+            <split size="43"/>
+            <dock id="" activePageId="Toolbar.1">
+                <page id="Toolbar.1"/>
+            </dock>
+            <split size="2002"/>
+            <dock id="" activePageId="DAG.1">
+                <page id="DAG.1"/>
+                <page id="Curve Editor.1"/>
+                <page id="DopeSheet.1"/>
+                <page id="Script Editor.1"/>
+                <page id="Error Console.1"/>
+            </dock>
+            <split size="507"/>
+            <dock id="" activePageId="Properties.1">
+                <page id="Properties.1"/>
+            </dock>
+        </splitter>
+    </window>
+    <window x="2560" y="0" w="1920" h="1200" fullscreen="1" screen="2">
+        <splitter orientation="2">
+            <split size="1200"/>
+            <dock id="" activePageId="Viewer.1">
+                <page id="Viewer.1"/>
+            </dock>
+        </splitter>
+    </window>
+</layout>
+}
+Root {
+ inputs 0
+ name /Volumes/RESOURCES/05_Motion_Studio_Tools/development/deadline/scripts/Jobs/JobCreateQuicktime/JobCreateQuicktimeNukeTemplate.nk
+ project_directory "\[python \{nuke.script_directory()\}]"
+ format "2048 1556 0 0 2048 1556 1 2K_Super_35(full-ap)"
+ proxy_type scale
+ proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+}
+Read {
+ inputs 0
+ file ./readNodeProxy.jpg
+ format "1920 1080 0 0 1920 1080 1 HD"
+ origset true
+ auto_alpha true
+ name inputSequence
+ xpos -810
+ ypos -814
+}
+set Nd9af4e0 [stack 0]
+Dot {
+ name Dot2
+ xpos -616
+ ypos -788
+}
+set Nd9b9200 [stack 0]
+Dot {
+ name Dot4
+ xpos -452
+ ypos -788
+}
+Blur {
+ size 50
+ name Blur1
+ xpos -480
+ ypos -758
+}
+Grade {
+ multiply 0.075
+ white_clamp true
+ name Grade1
+ xpos -480
+ ypos -724
+}
+Text {
+ message "Frames\n\nFPS\n\nDate\n\nSequence Directory"
+ font ./Arial.ttf
+ size {{height/25 i}}
+ leading 0.2
+ xjustify right
+ yjustify top
+ Transform 1
+ box {{width/20 i} {height/10 i} {width/3-width/100 i} {height-height/10 i x40 579}}
+ center {1024 1024}
+ color {0.6200000048 0.6200000048 0.6200000048 1}
+ name slateTextLeft
+ xpos -480
+ ypos -700
+}
+Text {
+ message "\[value inputSequence.first]-\[value inputSequence.last]\n\n\[value root.fps]\n\n\[date]\n\n\[value inputSequence.file]"
+ font ./Arial.ttf
+ size {{height/25 i}}
+ leading 0.2
+ yjustify top
+ Transform 1
+ box {{width/3 i} {height/10 i} {width-width/20 i} {height-height/10 i x40 579}}
+ center {1024 1024}
+ name slateTextRight
+ xpos -480
+ ypos -676
+}
+Text {
+ message "Spinifex Group"
+ font ./Arial.ttf
+ size {{height/20 i}}
+ leading 0.2
+ xjustify right
+ yjustify bottom
+ Transform 1
+ box {{width/20 i} {height/20 i} {width-width/20 i} {height/3 i x40 579}}
+ color {0 0.18 0 0.18}
+ name logoText1
+ xpos -480
+ ypos -652
+}
+push $Nd9b9200
+Switch {
+ inputs 2
+ which {{"inrange(frame, \[value inputSequence.first], \[value inputSequence.first])"}}
+ name switchFirstFrame
+ xpos -644
+ ypos -652
+}
+set Nd9efbc0 [stack 0]
+push $Nd9af4e0
+Switch {
+ inputs 2
+ name switchSlate
+ xpos -810
+ ypos -652
+}
+Dot {
+ name Dot1
+ xpos -782
+ ypos -588
+}
+set Nd9f8360 [stack 0]
+Reformat {
+ type "to box"
+ box_width {{width}}
+ box_height {{height*1.2}}
+ box_fixed true
+ black_outside true
+ name Reformat1
+ xpos -641
+ ypos -585
+}
+Text {
+ font ./Arial.ttf
+ size {{height/20 i x2 46.3292549}}
+ yjustify bottom
+ Transform 1
+ box {{width/100 i} {(height/1.2)/100 i} {width-width/100 i} {(height/1.2)/10-(height/1.2)/100 i}}
+ name footerTextLeft
+ xpos -641
+ ypos -561
+}
+Text {
+ message "Spinifex Group"
+ font ./Arial.ttf
+ size {{height/20 i}}
+ xjustify right
+ yjustify bottom
+ Transform 1
+ box {{width/100 i} {(height/1.2)/100 i} {width-width/100 i} {(height/1.2)/10-(height/1.2)/100 i}}
+ color {0 0.1899999976 0 1}
+ name footerTextRight
+ xpos -641
+ ypos -537
+ disable {{"inrange(frame, \[value inputSequence.first], \[value inputSequence.first])" i K x2 0}}
+}
+Text {
+ message "\[value root.name]"
+ font ./Arial.ttf
+ size {{height/30 i}}
+ yjustify top
+ Transform 1
+ box {{width/100 i} {height-(height/1.2)/10 i} {width-width/100 i} {height-(height/1.2)/100 i}}
+ name headerTextLeft
+ xpos -641
+ ypos -513
+}
+push $Nd9f8360
+Switch {
+ inputs 2
+ name switchFrames
+ xpos -810
+ ypos -513
+}
+Reformat {
+ type scale
+ resize fit
+ name scaleDown
+ xpos -810
+ ypos -448
+}
+Write {
+ file destination.mov
+ file_type mov
+ codec apcn
+ fps 30
+ keyframerate 0
+ settings 000000000000000000000000000001cc7365616e000000010000000100000000000001b876696465000000010000000f00000000000000227370746c0000000100000000000000006170636e000000000018000003ff000000207470726c00000001000000000000000000000000001e000000000000000000246472617400000001000000000000000000000000000000530000010000000100000000156d70736f00000001000000000000000000000000186d66726100000001000000000000000000000000000000187073667200000001000000000000000000000000000000156266726100000001000000000000000000000000166d70657300000001000000000000000000000000002868617264000000010000000000000000000000000000000000000000000000000000000000000016656e647300000001000000000000000000000000001663666c67000000010000000000000000004400000018636d66720000000100000000000000006170706c00000014636c75740000000100000000000000000000003263646563000000010000000000000000696370746e636c630002000200020100000000010000000100010000ff010000001c766572730000000100000000000000000003001c00010000
+ checkHashOnRead false
+ name outputMovie
+ xpos -810
+ ypos -424
+}
+push $Nd9efbc0
+Viewer {
+ input_process false
+ name Viewer1
+ xpos -333
+ ypos -441
+}
