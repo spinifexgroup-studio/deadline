@@ -2,7 +2,6 @@
 Create proxies deadline monitor - uses nuke to do the job
 TODO:
 - fix 2.15GB bug
-- eat some poo
 - add status bar when submitting
 '''
 
@@ -11,6 +10,7 @@ from System.IO import *
 from System.Text import *
 
 from Deadline.Scripting import *
+from DeadlineUI.Controls.Scripting.DeadlineScriptDialog import DeadlineScriptDialog
 
 from datetime import date
 
@@ -34,7 +34,7 @@ def __main__():
 	global scriptDialog
 	global settings
 	
-	dialogWidth = 250
+	dialogWidth = 300
 	dialogHeight = 265
 	labelWidth = 100
 	tabHeight = 600
@@ -42,12 +42,13 @@ def __main__():
 	smallControlWidth = dialogWidth-labelWidth-padding
 	fullControlWidth = dialogWidth-labelWidth-padding
 	
-	scriptDialog = DeadlineScriptEngine.GetScriptDialog()
+	scriptDialog = DeadlineScriptDialog()
 	scriptDialog.SetSize( dialogWidth+padding, dialogHeight )
 	scriptDialog.SetTitle( 'Create Proxy' )
 	
 	# Start Settings Group
 	scriptDialog.AddGroupBox( 'GroupBox', 'Format Settings', False )
+	
 	# Resolution Popup
 	resolutions = ('Full Resolution', 'Half Resolution', 'Third Resolution', 'Quarter Resolution')
 	scriptDialog.AddRow()
@@ -59,7 +60,7 @@ def __main__():
 	scriptDialog.AddRow()
 	scriptDialog.AddControl( 'FormatLabel', 'LabelControl', 'Format', labelWidth, -1 )
 	formatCombo = scriptDialog.AddComboControl ( 'FormatComboBox' , 'ComboControl', formats[0], formats, smallControlWidth, -1 )
-	formatCombo.ValueModified += FormatComboModified
+	formatCombo.ValueModified.connect(FormatComboModified)
 	scriptDialog.EndRow()
 	# FPS Range Slider
 	scriptDialog.AddRow()
@@ -67,12 +68,15 @@ def __main__():
 	scriptDialog.AddRangeControl ( 'FPSRangeBox', 'RangeControl', 30, 1, 60, 0, 1, fullControlWidth, -1 )
 	scriptDialog.EndRow()
 
+
 	# End Settings group
 	scriptDialog.EndGroupBox( False )
-	
+		
 	# Start Location Group
-	scriptDialog.AddGroupBox( 'GroupBox', 'Save Location', False )
+	scriptDialog.AddGroupBox( 'GroupBox', 'Save Location (Sub Dir Preferred)', False )
 	# Add Radio Buttons
+	
+	'''
 	scriptDialog.AddRow()
 	scriptDialog.AddRadioControl( "RadioDirSub", "RadioControl", True, "Sub Directory: filedir/proxy/filename", "LocationGroup", dialogWidth-padding, -1 )
 	scriptDialog.EndRow()
@@ -82,25 +86,42 @@ def __main__():
 	scriptDialog.AddRow()
 	scriptDialog.AddRadioControl( "RadioDirParent", "RadioControl", False, "Parent Directory: filedir_proxy/filename", "LocationGroup", dialogWidth-padding, -1 )
 	scriptDialog.EndRow()
+	'''
+	
+	
+	scriptDialog.AddRow()
+	scriptDialog.AddRadioControl( "RadioDirSub", "RadioControl", True, "Sub Directory: filedir/proxy/filename", "LocationGroup", 20, -1 )
+	scriptDialog.AddControl( 'label1', 'LabelControl', 'Sub Directory: filedir/proxy/filename', dialogWidth-padding-20, -1 )
+	scriptDialog.EndRow()
+	scriptDialog.AddRow()
+	scriptDialog.AddRadioControl( "RadioDirSame", "RadioControl", False, "Same Directory: filedir/filename_proxy", "LocationGroup", 20, -1 )
+	scriptDialog.AddControl( 'label2', 'LabelControl', 'Same Directory: filedir/filename_proxy', dialogWidth-padding-20, -1 )
+	scriptDialog.EndRow()
+	scriptDialog.AddRow()
+	scriptDialog.AddRadioControl( "RadioDirParent", "RadioControl", False, "Parent Directory: filedir_proxy/filename", "LocationGroup", 20, -1 )
+	scriptDialog.AddControl( 'label3', 'LabelControl', 'Parent Directory: filedir_proxy/filename', dialogWidth-padding-20, -1 )
+	scriptDialog.EndRow()
+	
+	
 	# End Location group 
 	scriptDialog.EndGroupBox( False )
-	
+
 	# Submit and Cancel buttons
 	scriptDialog.AddRow()
 	aboutButton = scriptDialog.AddControl( 'AboutButton', 'ButtonControl', '?', 20, -1 )
-	aboutButton.ValueModified += AboutButtonPressed
+	aboutButton.ValueModified.connect(AboutButtonPressed)
 	scriptDialog.AddControl( 'DummyLabel1', 'LabelControl', '', 20,-1 )
 	cancelButton = scriptDialog.AddControl( 'CancelButton', 'ButtonControl', 'Cancel', 100, -1 )
-	cancelButton.ValueModified += CancelButtonPressed
+	cancelButton.ValueModified.connect(CancelButtonPressed)
 	submitButton = scriptDialog.AddControl( 'SubmitButton', 'ButtonControl', 'Submit', 100, -1)
-	submitButton.ValueModified += SubmitButtonPressed
+	submitButton.ValueModified.connect(SubmitButtonPressed)
 	scriptDialog.EndRow()
 	
 	# Read in config File
 	configFile = ClientUtils.GetCurrentUserHomeDirectory() + "/settings/JobCreateProxySettings.ini"
 	ReadStickySettings( scriptDialog, configFile )
 	
-	scriptDialog.ShowDialog( False )
+	scriptDialog.ShowDialog( True )
 
 
 ########################################################################
@@ -235,7 +256,7 @@ def SubmitButtonPressed( *args ):
 		return
 
 	# Get directories
-	pluginDirectory = RepositoryUtils.GetScriptsDirectory() + '/Jobs/JobCreateProxy'
+	pluginDirectory = RepositoryUtils.GetCustomPluginsDirectory() + '/JobCreateProxy'
 	templateNukeScript = pluginDirectory + '/JobCreateProxyNukeTemplate.nk'
 	nukePythonScript = pluginDirectory + '/ModifyNukeTemplate.py'
 
@@ -355,8 +376,8 @@ def SubmitButtonPressed( *args ):
 
 			fileHandle.write( "Comment=%s\n" % comment )
 			fileHandle.write( "Department=%s\n" % "Pure Awesome" )
-			fileHandle.write( "Pool=%s\n" % "2d_nuke" )
-			fileHandle.write( "Group=%s\n" % "2d_mac" )
+			fileHandle.write( "Pool=%s\n" % "nuke" )
+			fileHandle.write( "Group=%s\n" % "mac" )
 			fileHandle.write( "Priority=%s\n" % str(job.JobPriority) )
 			fileHandle.write( "MachineLimit=1\n" )
 			fileHandle.write( "ConcurrentTasks=1\n" )
