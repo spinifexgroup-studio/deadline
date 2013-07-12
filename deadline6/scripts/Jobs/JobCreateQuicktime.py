@@ -2,7 +2,6 @@
 Create a quicktime from deadline monitor - uses nuke to do the job
 TODO:
 - fix 2.15GB bug
-- eat some poo
 - add status bar when submitting
 '''
 
