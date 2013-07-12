@@ -11,6 +11,7 @@ from System.IO import *
 from System.Text import *
 
 from Deadline.Scripting import *
+from DeadlineUI.Controls.Scripting.DeadlineScriptDialog import DeadlineScriptDialog
 
 from datetime import date
 
@@ -42,7 +43,7 @@ def __main__():
 	smallControlWidth = dialogWidth-labelWidth-padding
 	fullControlWidth = dialogWidth-labelWidth-padding
 	
-	scriptDialog = DeadlineScriptEngine.GetScriptDialog()
+	scriptDialog = DeadlineScriptDialog()
 	scriptDialog.SetSize( dialogWidth+padding, dialogHeight )
 	scriptDialog.SetTitle( 'Create Quicktime' )
 	
@@ -88,19 +89,20 @@ def __main__():
 	scriptDialog.AddGroupBox( 'GroupBox', 'Save Location', False )
 	# Add Radio Buttons
 	scriptDialog.AddRow()
-	scriptDialog.AddControl( 'LocationLabel', 'LabelControl', 'Location', labelWidth, -1 )
+	#scriptDialog.AddControl( 'LocationLabel', 'LabelControl', 'Location', labelWidth, -1 )
+	scriptDialog.AddControl( 'LocationLabel', 'LabelControl', 'Same Directory', labelWidth, -1 )
 	scriptDialog.AddRadioControl( "RadioDirSame", "RadioControl", False, "Same Directory", "LocationGroup", smallControlWidth, -1 )
 	scriptDialog.EndRow()
 	scriptDialog.AddRow()
-	scriptDialog.AddControl( 'LocationDummyLabel1', 'LabelControl', '', labelWidth, -1 )
+	scriptDialog.AddControl( 'LocationDummyLabel1', 'LabelControl', 'Parent Directory', labelWidth, -1 )
 	scriptDialog.AddRadioControl( "RadioDirParent", "RadioControl", False, "Parent Directory", "LocationGroup", smallControlWidth, -1 )
 	scriptDialog.EndRow()
 	scriptDialog.AddRow()
-	scriptDialog.AddControl( 'LocationDummyLabel2', 'LabelControl', '', labelWidth, -1 )
+	scriptDialog.AddControl( 'LocationDummyLabel2', 'LabelControl', '2D/_Renders/WIP', labelWidth, -1 )
 	scriptDialog.AddRadioControl( "RadioDir2dWip", "RadioControl", True, "2D/_Renders/WIP", "LocationGroup", smallControlWidth, -1 )
 	scriptDialog.EndRow()
 	scriptDialog.AddRow()
-	scriptDialog.AddControl( 'LocationDummyLabel3', 'LabelControl', '', labelWidth, -1 )
+	scriptDialog.AddControl( 'LocationDummyLabel3', 'LabelControl', '3D/Renders/_WIP', labelWidth, -1 )
 	scriptDialog.AddRadioControl( "RadioDir3dWip", "RadioControl", False, "3D/Renders/_WIP", "LocationGroup", smallControlWidth, -1 )
 	scriptDialog.EndRow()
 	# End Location group 
@@ -127,19 +129,20 @@ def __main__():
 	# Submit and Cancel buttons
 	scriptDialog.AddRow()
 	aboutButton = scriptDialog.AddControl( 'AboutButton', 'ButtonControl', '?', 20, -1 )
-	aboutButton.ValueModified += AboutButtonPressed
+	aboutButton.ValueModified.connect(AboutButtonPressed)
 	scriptDialog.AddControl( 'DummyLabel1', 'LabelControl', '', 20,-1 )
 	cancelButton = scriptDialog.AddControl( 'CancelButton', 'ButtonControl', 'Cancel', 100, -1 )
-	cancelButton.ValueModified += CancelButtonPressed
+	cancelButton.ValueModified.connect(CancelButtonPressed)
 	submitButton = scriptDialog.AddControl( 'SubmitButton', 'ButtonControl', 'Submit', 100, -1)
-	submitButton.ValueModified += SubmitButtonPressed
+	submitButton.ValueModified.connect(SubmitButtonPressed)
 	scriptDialog.EndRow()
+	
 	
 	# Read in config File
 	configFile = ClientUtils.GetCurrentUserHomeDirectory() + "/settings/JobCreateQuicktimeSettings.ini"
 	ReadStickySettings( scriptDialog, configFile )
 	
-	scriptDialog.ShowDialog( False )
+	scriptDialog.ShowDialog( True )
 
 
 ########################################################################
@@ -297,7 +300,7 @@ def SubmitButtonPressed( *args ):
 		return
 
 	# Get directories
-	pluginDirectory = RepositoryUtils.GetScriptsDirectory() + '/Jobs/JobCreateQuicktime'
+	pluginDirectory = RepositoryUtils.GetCustomPluginsDirectory() + '/JobCreateQuicktime'
 	templateNukeScript = pluginDirectory + '/JobCreateQuicktimeNukeTemplate.nk'
 	nukePythonScript = pluginDirectory + '/ModifyNukeTemplate.py'
 
@@ -439,8 +442,8 @@ def SubmitButtonPressed( *args ):
 
 			fileHandle.write( "Comment=%s\n" % comment )
 			fileHandle.write( "Department=%s\n" % "Pure Awesome" )
-			fileHandle.write( "Pool=%s\n" % "2d_nuke_qt" )
-			fileHandle.write( "Group=%s\n" % "2d_mac" )
+			fileHandle.write( "Pool=%s\n" % "nuke" )
+			fileHandle.write( "Group=%s\n" % "mac" )
 			fileHandle.write( "Priority=%s\n" % str(job.JobPriority) )
 			fileHandle.write( "MachineLimit=1\n" )
 			fileHandle.write( "ConcurrentTasks=1\n" )
