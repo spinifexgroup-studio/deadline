@@ -495,6 +495,6 @@ def SubmitButtonPressed( *args ):
 	configFile = currentUserHomeDirectory + "/settings/JobCreateQuicktimeSettings.ini"
 	WriteStickySettings( scriptDialog, configFile )
 	scriptDialog.CloseDialog()
-	scriptDialog.ShowMessageBox ( submitResultsString , 'Results of Submission' )
+	scriptDialog.ShowMessageBox ( "Full submission results are in console. Last submission results:\n\n" + submitResultsString , 'Results of Submission' )
 
 	
