@@ -5,10 +5,7 @@ TODO:
 
 Reverse pop the array when determining the WIP paths
 
-Display output in a scrolling window to prevent super large message windows
-
-Add progress bar
+Make progress bar update
 
 Fix 2.15GB bug
 
-Proxy Submit to all if not a quicktime

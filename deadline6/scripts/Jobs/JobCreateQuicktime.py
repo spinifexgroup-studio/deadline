@@ -123,6 +123,11 @@ def __main__():
 	scriptDialog.EndRow()
 	# End Location group 
 	scriptDialog.EndGroupBox( False )
+	
+	# Progress Bar
+	scriptDialog.AddRow()
+	scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
+	scriptDialog.EndRow()
 
 	
 	# Submit and Cancel buttons
@@ -135,6 +140,7 @@ def __main__():
 	submitButton = scriptDialog.AddControl( 'SubmitButton', 'ButtonControl', 'Submit', 100, -1)
 	submitButton.ValueModified.connect(SubmitButtonPressed)
 	scriptDialog.EndRow()
+	
 	
 	
 	# Read in config File
@@ -325,7 +331,7 @@ def SubmitButtonPressed( *args ):
 	debugFileHandle.write ( str(scaleAmount)+'\n' )
 	debugFileHandle.write ( '\n' )
 	'''
-
+	
 	# Iterate through selected jobs
 	for i in range( 0, numJobs ):
 		job = jobs [i]
@@ -460,9 +466,21 @@ def SubmitButtonPressed( *args ):
 			fileHandle.close()
 
 			submitString = ClientUtils.ExecuteCommandAndGetOutput ( ( jobInfoFile , pluginInfoFile , submissionNukeScript ) )
-			submitResultsString = submitResultsString+submitString+'\n'
+			
+			# Print submission results to console - we only dsplay result of final submission
+			print "---------------------------------------------------------------------------------\n"
+			print submitResultsString
+			submitResultsString = submitString
 			
 			
+			# Update progress Bar
+			
+			progress = int (100.0/numJobs)
+			progress = (i+1)*progress
+			if progress > 100:
+				progress = 100
+			scriptDialog.SetValue( "ProgressBox", progress )
+			print ("Perecent of jobs submitted: " + str(progress) + "\n" )
 			# Debugging
 			
 			debugFileHandle.write ( str(shouldWriteSlate)+'\n' )			

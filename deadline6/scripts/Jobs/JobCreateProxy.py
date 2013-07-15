@@ -106,6 +106,13 @@ def __main__():
 	# End Location group 
 	scriptDialog.EndGroupBox( False )
 
+
+	# Progress Bar
+	scriptDialog.AddRow()
+	scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
+	scriptDialog.EndRow()
+
+
 	# Submit and Cancel buttons
 	scriptDialog.AddRow()
 	aboutButton = scriptDialog.AddControl( 'AboutButton', 'ButtonControl', '?', 20, -1 )
@@ -290,6 +297,9 @@ def SubmitButtonPressed( *args ):
 			
 			outputFilenameBase, outputFilenameExt = os.path.splitext (outputFilename)
 			
+			# set submission group to all computers - we'll change it to macs if it's a quicktime
+			submitGroup = "all"
+
 			#formats = ('Same as Input','EXR','TGA','JPG','ProRes 4444')
 			if not format == 'Same as Input':
 				if format == 'EXR':
@@ -301,6 +311,8 @@ def SubmitButtonPressed( *args ):
 				if format == 'ProRes 4444':
 					outputFilenameBase = outputFilenameBase.replace("_#","").replace(".#","").replace("#","")
 					outputFilenameExt = '.mov'
+					# prores can only be written via mac
+					submitGroup = "mac"
 			
 			# Set up proxy part of filename
 			if shouldWriteToSameDir:
@@ -377,7 +389,7 @@ def SubmitButtonPressed( *args ):
 			fileHandle.write( "Comment=%s\n" % comment )
 			fileHandle.write( "Department=%s\n" % "Pure Awesome" )
 			fileHandle.write( "Pool=%s\n" % "nuke" )
-			fileHandle.write( "Group=%s\n" % "mac" )
+			fileHandle.write( "Group=%s\n" % submitGroup )
 			fileHandle.write( "Priority=%s\n" % str(job.JobPriority) )
 			fileHandle.write( "MachineLimit=1\n" )
 			fileHandle.write( "ConcurrentTasks=1\n" )
@@ -395,9 +407,21 @@ def SubmitButtonPressed( *args ):
 			fileHandle.close()
 
 			submitString = ClientUtils.ExecuteCommandAndGetOutput ( ( jobInfoFile , pluginInfoFile , submissionNukeScript ) )
-			submitResultsString = submitResultsString+submitString+'\n'
+
+			# Print submission results to console - we only dsplay result of final submission
+			print "---------------------------------------------------------------------------------\n"
+			print submitResultsString
+			submitResultsString = submitString
 			
 			
+			# Update progress Bar
+			
+			progress = int (100.0/numJobs)
+			progress = (i+1)*progress
+			if progress > 100:
+				progress = 100
+			scriptDialog.SetValue( "ProgressBox", progress )
+			print ("Perecent of jobs submitted: " + str(progress) + "\n" )
 			# Debugging
 			
 			debugFileHandle.write ( str(nukeArgs)+'\n' )					
