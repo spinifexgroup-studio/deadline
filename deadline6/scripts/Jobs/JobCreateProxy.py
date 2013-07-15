@@ -270,17 +270,6 @@ def SubmitButtonPressed( *args ):
 	currentUserHomeDirectory = ClientUtils.GetCurrentUserHomeDirectory()
 	currentUserTempDirectory = currentUserHomeDirectory + '/temp'
 		
-	# Debugging
-	debugFile = currentUserTempDirectory+'/JobCreateProxyDebug.txt'
-	debugFileHandle = open( debugFile, 'w' )
-	
-	'''
-	debugFileHandle.write ( str(bitRate)+'\n' )
-	debugFileHandle.write ( str(frameRate)+'\n' )
-	debugFileHandle.write ( str(resolution)+'\n' )
-	debugFileHandle.write ( str(scaleAmount)+'\n' )
-	debugFileHandle.write ( '\n' )
-	'''
 
 	# Iterate through selected jobs
 	for i in range( 0, numJobs ):
@@ -412,6 +401,8 @@ def SubmitButtonPressed( *args ):
 			print "---------------------------------------------------------------------------------\n"
 			print submitResultsString
 			submitResultsString = submitString
+			# Print some info to console
+			print ( "Nuke Args = %s\n" % nukeArgs )
 			
 			
 			# Update progress Bar
@@ -424,12 +415,8 @@ def SubmitButtonPressed( *args ):
 			print ("Perecent of jobs submitted: " + str(progress) + "\n" )
 			# Debugging
 			
-			debugFileHandle.write ( str(nukeArgs)+'\n' )					
-			debugFileHandle.write ( '\n' )
-			
 		
 		
-	debugFileHandle.close()
 	configFile = currentUserHomeDirectory + "/settings/JobCreateProxySettings.ini"
 	WriteStickySettings( scriptDialog, configFile )
 	scriptDialog.CloseDialog()

@@ -319,18 +319,6 @@ def SubmitButtonPressed( *args ):
 	except:
 		pass
 
-	# Debugging
-	debugFile = currentUserTempDirectory+'/JobCreateQuicktimeDebug.txt'
-	debugFileHandle = open( debugFile, 'w' )
-	
-	debugFileHandle.write ( str(codec)+'\n' )
-	'''
-	debugFileHandle.write ( str(bitRate)+'\n' )
-	debugFileHandle.write ( str(frameRate)+'\n' )
-	debugFileHandle.write ( str(resolution)+'\n' )
-	debugFileHandle.write ( str(scaleAmount)+'\n' )
-	debugFileHandle.write ( '\n' )
-	'''
 	
 	# Iterate through selected jobs
 	for i in range( 0, numJobs ):
@@ -362,7 +350,33 @@ def SubmitButtonPressed( *args ):
 			if shouldWriteTo2dWipDir or shouldWriteTo3dWipDir:
 				moviePath = RepositoryUtils.CheckPathMapping( moviePath , True )
 				moviePathSplit = moviePath.split ('/')
+				fileName = moviePathSplit[ len(moviePathSplit) - 1 ]
 				newMoviePath = ''
+				# Iterate through list till we get to 2D or 3D directory
+				for k in range ( 0, len (moviePathSplit)):
+					popItem = moviePathSplit.pop()
+					print popItem
+					if popItem == '2D' or popItem == '3D':
+						for pathItem in moviePathSplit:
+							# Check for null strings - prevents // in path
+							if pathItem != '':
+								newMoviePath = newMoviePath + '/' + pathItem
+						if shouldWriteTo2dWipDir:
+							newMoviePath = newMoviePath + '/2D/_Renders/WIP'
+						if shouldWriteTo3dWipDir:
+							newMoviePath = newMoviePath + '/3D/Renders/_WIP'
+						# Make a date folder if we are making dated files
+						if shouldAppendLocation:
+							# ISO date no dashes
+							dateString = str(date.today() ).replace('-','')
+							newMoviePath = newMoviePath + '/' + dateString
+							if not os.path.exists (newMoviePath):
+								os.mkdir (newMoviePath)
+						# Finish up the path and break		
+						moviePath = newMoviePath + '/' + fileName
+						break
+				
+				'''
 				# Iterate through list till we get to '2_Studio' folder structure
 				for pathItem in moviePathSplit:
 					# Check for null strings - prevents // in path
@@ -383,6 +397,7 @@ def SubmitButtonPressed( *args ):
 							# Finish up the path and break		
 							moviePath = newMoviePath + '/' + moviePathSplit[ len(moviePathSplit) - 1 ]
 							break
+				'''
 			
 			# Append date to file in form _YYYY-MM-DD_VV.mov
 			if shouldAppendLocation:
@@ -399,7 +414,6 @@ def SubmitButtonPressed( *args ):
 			else:
 				moviePath = moviePath + '.mov'
 			
-			debugFileHandle.write ( moviePath+'\n' )
 			
 			# Get some information about the job
 			sceneFile = JobUtils.GetDataFilename( i )
@@ -425,6 +439,7 @@ def SubmitButtonPressed( *args ):
 			nukeProcess = ProcessUtils.SpawnProcess ( nukePath , nukeArgs, currentUserTempDirectory )
 			if not ProcessUtils.WaitForExit ( nukeProcess, 10000 ): # Wait up to ten seconds for script to be made
 				return #nuke failed
+
 
 			# Create job info file
 			jobInfoFile = currentUserTempDirectory + ("/nuke_quicktime_submit_info.job")
@@ -471,6 +486,8 @@ def SubmitButtonPressed( *args ):
 			print "---------------------------------------------------------------------------------\n"
 			print submitResultsString
 			submitResultsString = submitString
+			# Print some info to console
+			print ( "Nuke Args = %s\n" % nukeArgs )
 			
 			
 			# Update progress Bar
@@ -481,17 +498,9 @@ def SubmitButtonPressed( *args ):
 				progress = 100
 			scriptDialog.SetValue( "ProgressBox", progress )
 			print ("Perecent of jobs submitted: " + str(progress) + "\n" )
-			# Debugging
-			
-			debugFileHandle.write ( str(shouldWriteSlate)+'\n' )			
-			debugFileHandle.write ( str(shouldWriteFrames)+'\n' )			
-			debugFileHandle.write ( str(nukeArgs)+'\n' )		
-			
-			debugFileHandle.write ( '\n' )
 			
 		
 		
-	debugFileHandle.close()
 	configFile = currentUserHomeDirectory + "/settings/JobCreateQuicktimeSettings.ini"
 	WriteStickySettings( scriptDialog, configFile )
 	scriptDialog.CloseDialog()
