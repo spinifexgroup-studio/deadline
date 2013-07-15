@@ -416,7 +416,7 @@ def SubmitButtonPressed( *args ):
 			
 			
 			# Get some information about the job
-			sceneFile = JobUtils.GetDataFilename( i )
+			# sceneFile = JobUtils.GetDataFilename( i )
 			firstFrame = JobUtils.GetFirstFrame( i )
 			lastFrame = JobUtils.GetLastFrame( i )
 			
