@@ -355,7 +355,6 @@ def SubmitButtonPressed( *args ):
 				# Iterate through list till we get to 2D or 3D directory
 				for k in range ( 0, len (moviePathSplit)):
 					popItem = moviePathSplit.pop()
-					print popItem
 					if popItem == '2D' or popItem == '3D':
 						for pathItem in moviePathSplit:
 							# Check for null strings - prevents // in path
