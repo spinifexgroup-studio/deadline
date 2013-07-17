@@ -342,12 +342,15 @@ def SubmitButtonPressed( *args ):
 			if shouldWriteToParentDir:
 				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath ).replace('\\','/')
 				moviePathSplit = moviePath.split ('/')
+				fileName = moviePathSplit[ len(moviePathSplit) - 1 ]
 				newMoviePath = ''
 				for k in range ( 0, len (moviePathSplit) - 2 ):
 					pathItem = moviePathSplit[k]
 					if pathItem != '':
 						newMoviePath = newMoviePath + '/' + pathItem
-				moviePath = newMoviePath + '/' + moviePathSplit[ len(moviePathSplit) - 1 ]
+				outputDirectory = newMoviePath
+				outputFilename = fileName
+				moviePath = newMoviePath + '/' + fileName
 			
 			# Build Directory if Writing to WIP directories
 			if shouldWriteTo2dWipDir or shouldWriteTo3dWipDir:
@@ -375,6 +378,8 @@ def SubmitButtonPressed( *args ):
 							if not os.path.exists (newMoviePath):
 								os.mkdir (newMoviePath)
 						# Finish up the path and break		
+						outputDirectory = newMoviePath
+						outputFilename = fileName
 						moviePath = newMoviePath + '/' + fileName
 						break
 				
@@ -409,14 +414,16 @@ def SubmitButtonPressed( *args ):
 				while not haveFoundDatedFileName:
 					versionString = '{0:02d}'.format(k)
 					k = k + 1
-					newMoviePath = moviePath + '_' + dateString + '_' + versionString + '.mov'
+					appendDate = '_' + dateString + '_' + versionString + '.mov'
+					newMoviePath = moviePath + appendDate
 					if not FileExists (newMoviePath):
 						moviePath = newMoviePath
+						outputFilename = outputFilename + appendDate
 						haveFoundDatedFileName = True
 			else:
 				moviePath = moviePath + '.mov'
-			
-			
+				outputFilename = outputFilename +'.mov'
+							
 			# Get some information about the job
 			# sceneFile = JobUtils.GetDataFilename( i )
 			firstFrame = JobUtils.GetFirstFrame( i )
@@ -471,6 +478,9 @@ def SubmitButtonPressed( *args ):
 			fileHandle.write( "ConcurrentTasks=1\n" )
 			fileHandle.write( "Frames=%s\n" % str(job.JobFrames) )
 			fileHandle.write( "ChunkSize=100000\n")
+			fileHandle.write( "OutputDirectory0=%s\n" %  outputDirectory )
+			fileHandle.write( "OutputFilename0=%s\n" %  outputFilename )
+
 			
 			if job.JobStatus != 'Completed':
 				fileHandle.write( "JobDependencies=%s\n" % job.JobId )
