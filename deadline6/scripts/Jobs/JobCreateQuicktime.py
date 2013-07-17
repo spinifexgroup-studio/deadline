@@ -24,6 +24,7 @@ import ConfigParser
 
 scriptDialog = None
 settings = None
+progressBarControl = None
 
 
 ########################################################################
@@ -33,6 +34,7 @@ settings = None
 def __main__():
 	global scriptDialog
 	global settings
+	global progressBarControl
 	
 	dialogWidth = 250
 	dialogHeight = 430
@@ -126,7 +128,7 @@ def __main__():
 	
 	# Progress Bar
 	scriptDialog.AddRow()
-	scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
+	progressBarControl = scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
 	scriptDialog.EndRow()
 
 	
@@ -269,6 +271,7 @@ def CancelButtonPressed( *args ):
 
 def SubmitButtonPressed( *args ):
 	global scriptDialog
+	global progressBarControl
 	submitResultsString = ""
 	
 	# Get list of jobs
@@ -445,7 +448,7 @@ def SubmitButtonPressed( *args ):
 			fileHandle = open( jobInfoFile, "w" )
 			fileHandle.write( "Plugin=Nuke\n" )
 			fileHandle.write( "Name=%s [CREATE QUICKTIME]\n" % job.JobName )
-			comment = ''
+			comment = resolution + ', '
 			if shouldAppendLocation:
 				comment = comment + 'dated, '
 			if shouldWriteSlate: 
@@ -460,7 +463,7 @@ def SubmitButtonPressed( *args ):
 				comment = comment + 'in 3D WIP'
 
 			fileHandle.write( "Comment=%s\n" % comment )
-			fileHandle.write( "Department=%s\n" % "Pure Awesome" )
+			fileHandle.write( "Department=%s\n" % "Autobots" )
 			fileHandle.write( "Pool=%s\n" % "nuke" )
 			fileHandle.write( "Group=%s\n" % "mac" )
 			fileHandle.write( "Priority=%s\n" % str(job.JobPriority) )
@@ -496,6 +499,7 @@ def SubmitButtonPressed( *args ):
 			if progress > 100:
 				progress = 100
 			scriptDialog.SetValue( "ProgressBox", progress )
+			progressBarControl.repaint()
 			print ("Perecent of jobs submitted: " + str(progress) + "\n" )
 			
 		

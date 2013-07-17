@@ -24,6 +24,7 @@ import ConfigParser
 
 scriptDialog = None
 settings = None
+progressBarControl = None
 
 
 ########################################################################
@@ -33,6 +34,7 @@ settings = None
 def __main__():
 	global scriptDialog
 	global settings
+	global progressBarControl
 	
 	dialogWidth = 300
 	dialogHeight = 265
@@ -109,7 +111,7 @@ def __main__():
 
 	# Progress Bar
 	scriptDialog.AddRow()
-	scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
+	progressBarControl = scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
 	scriptDialog.EndRow()
 
 
@@ -231,6 +233,7 @@ def CancelButtonPressed( *args ):
 
 def SubmitButtonPressed( *args ):
 	global scriptDialog
+	global progressBarControl
 	
 	submitResultsString = ''
 	
@@ -367,7 +370,9 @@ def SubmitButtonPressed( *args ):
 			fileHandle = open( jobInfoFile, "w" )
 			fileHandle.write( "Plugin=Nuke\n" )
 			fileHandle.write( "Name=%s [CREATE PROXY]\n" % job.JobName )
-			comment = ''
+			if format == 'Same as Input':
+				format = outputFilenameExt.upper().replace('.','') 
+			comment = resolution + ', ' + format + ', '
 			if shouldWriteToSubDir:
 				comment = comment + 'in sub directory'
 			if shouldWriteToSameDir:
@@ -376,7 +381,7 @@ def SubmitButtonPressed( *args ):
 				comment = comment + 'in parent directory'
 
 			fileHandle.write( "Comment=%s\n" % comment )
-			fileHandle.write( "Department=%s\n" % "Pure Awesome" )
+			fileHandle.write( "Department=%s\n" % "Autobots" )
 			fileHandle.write( "Pool=%s\n" % "nuke" )
 			fileHandle.write( "Group=%s\n" % submitGroup )
 			fileHandle.write( "Priority=%s\n" % str(job.JobPriority) )
@@ -412,6 +417,7 @@ def SubmitButtonPressed( *args ):
 			if progress > 100:
 				progress = 100
 			scriptDialog.SetValue( "ProgressBox", progress )
+			progressBarControl.repaint()
 			print ("Perecent of jobs submitted: " + str(progress) + "\n" )
 			# Debugging
 			
