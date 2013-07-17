@@ -389,6 +389,8 @@ def SubmitButtonPressed( *args ):
 			fileHandle.write( "ConcurrentTasks=1\n" )
 			fileHandle.write( "Frames=%s\n" % str(job.JobFrames) )
 			fileHandle.write( "ChunkSize=100\n")
+			fileHandle.write( "OutputDirectory0=%s\n" %  outputDirectory )
+			fileHandle.write( "OutputFilename0=%s\n" %  outputFilename )
 			
 			if job.JobStatus != 'Completed':
 				fileHandle.write( "JobDependencies=%s\n" % job.JobId )
