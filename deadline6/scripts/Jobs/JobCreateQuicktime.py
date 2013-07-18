@@ -17,6 +17,7 @@ from datetime import date
 import os
 import shutil
 import ConfigParser
+import threading
 
 ########################################################################
 ## Globals
@@ -24,7 +25,28 @@ import ConfigParser
 
 scriptDialog = None
 settings = None
-progressBarControl = None
+
+########################################################################
+##  Threads To do core logic
+########################################################################
+
+
+class workThread ( threading.Thread):
+	def __init__(self, threadID, name ):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+	def run(self):
+		global scriptDialog
+		
+		print "\n\n\n\n"
+		print "//////////////////////////////////////////////////////////////////////////////////////////"
+		print "//////////////////////////////////////////////////////////////////////////////////////////"
+		print "//////////////////////////////////////////////////////////////////////////////////////////\n"
+
+		print "Starting " + self.name
+		SubmitJobs()
+		print "Exiting " + self.name
 
 
 ########################################################################
@@ -127,9 +149,9 @@ def __main__():
 	scriptDialog.EndGroupBox( False )
 	
 	# Progress Bar
-	scriptDialog.AddRow()
-	progressBarControl = scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
-	scriptDialog.EndRow()
+	# scriptDialog.AddRow()
+	# progressBarControl = scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
+	# scriptDialog.EndRow()
 
 	
 	# Submit and Cancel buttons
@@ -256,23 +278,9 @@ def GetScaleAmount ( resolution ):
 	return scaleAmount		
 	
 	
-
-########################################################################
-## Button Functions
-########################################################################
-
-def AboutButtonPressed( *args ):
-	scriptDialog.ShowMessageBox ( "Written by Daniel Harkness, Spinifex Group\n\nGithub:\nhttps://github.com/spinifexgroup-studio/deadline\n\nGithub Script Path:\n/scripts/Jobs/JobCreateQuicktime"  , 'About' )
-
-
-def CancelButtonPressed( *args ):
-	scriptDialog.CloseDialog()
-
-
-def SubmitButtonPressed( *args ):
+def SubmitJobs( *args ):
 	global scriptDialog
 	global progressBarControl
-	submitResultsString = ""
 	
 	# Get list of jobs
 	jobs = JobUtils.GetSelectedJobs()
@@ -496,8 +504,7 @@ def SubmitButtonPressed( *args ):
 			
 			# Print submission results to console - we only dsplay result of final submission
 			print "---------------------------------------------------------------------------------\n"
-			print submitResultsString
-			submitResultsString = submitString
+			print submitString
 			# Print some info to console
 			print ( "Nuke Args = %s\n" % nukeArgs )
 			
@@ -508,15 +515,34 @@ def SubmitButtonPressed( *args ):
 			progress = (i+1)*progress
 			if progress > 100:
 				progress = 100
-			scriptDialog.SetValue( "ProgressBox", progress )
-			progressBarControl.repaint()
-			print ("Perecent of jobs submitted: " + str(progress) + "\n" )
-			
+			# scriptDialog.SetValue( "ProgressBox", progress )
+			# progressBarControl.repaint()
+			print ("Create Quicktime: Perecent of jobs submitted: " + str(progress) + "\n" )
 		
-		
-	configFile = currentUserHomeDirectory + "/settings/JobCreateQuicktimeSettings.ini"
-	WriteStickySettings( scriptDialog, configFile )
+
+########################################################################
+## Button Functions
+########################################################################
+
+def AboutButtonPressed( *args ):
+	global scriptDialog
+	scriptDialog.ShowMessageBox ( "Written by Daniel Harkness, Spinifex Group\n\nGithub:\nhttps://github.com/spinifexgroup-studio/deadline\n\nGithub Script Path:\n/scripts/Jobs/JobCreateQuicktime"  , 'About' )
+
+
+def CancelButtonPressed( *args ):
+	global scriptDialog
 	scriptDialog.CloseDialog()
-	scriptDialog.ShowMessageBox ( "Full submission results are in console. Last submission results:\n\n" + submitResultsString , 'Results of Submission' )
+
+def SubmitButtonPressed( *args ):
+	global scriptDialog
+
+	workerThread = workThread (1, "Create Quicktime Thread")
+	workerThread.start()
+
+	configFile = ClientUtils.GetCurrentUserHomeDirectory() + "/settings/JobCreateQuicktimeSettings.ini"
+	WriteStickySettings( scriptDialog, configFile )
+
+	scriptDialog.CloseDialog()
+	scriptDialog.ShowMessageBox ( "Your jobs will start appearing in the monitor soon.\n\nFull submission results are in the console.", 'Results of Submission' )
 
 	
