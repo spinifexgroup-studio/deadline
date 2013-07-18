@@ -511,8 +511,6 @@ def SubmitJobs( *args ):
 			
 			progress = int (100.0/numJobs)
 			progress = (i+1)*progress
-			print i+1
-			print numJobs
 			if (i+1) >= numJobs:
 				progress = 100
 			# scriptDialog.SetValue( "ProgressBox", progress )
