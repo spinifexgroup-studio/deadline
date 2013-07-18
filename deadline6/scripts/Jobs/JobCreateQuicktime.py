@@ -279,8 +279,6 @@ def GetScaleAmount ( resolution ):
 	
 	
 def SubmitJobs( *args ):
-	global scriptDialog
-	global progressBarControl
 	
 	# Get list of jobs
 	jobs = JobUtils.GetSelectedJobs()
@@ -513,7 +511,9 @@ def SubmitJobs( *args ):
 			
 			progress = int (100.0/numJobs)
 			progress = (i+1)*progress
-			if progress > 100:
+			print i+1
+			print numJobs
+			if (i+1) >= numJobs:
 				progress = 100
 			# scriptDialog.SetValue( "ProgressBox", progress )
 			# progressBarControl.repaint()

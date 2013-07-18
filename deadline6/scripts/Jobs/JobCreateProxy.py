@@ -17,6 +17,7 @@ from datetime import date
 import os
 import shutil
 import ConfigParser
+import threading
 
 ########################################################################
 ## Globals
@@ -24,9 +25,32 @@ import ConfigParser
 
 scriptDialog = None
 settings = None
-progressBarControl = None
+# progressBarControl = None
 
 
+########################################################################
+##  Threads To do core logic
+########################################################################
+
+class workThread ( threading.Thread):
+	def __init__(self, threadID, name ):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+	def run(self):
+		global scriptDialog
+		
+		print "\n\n\n\n"
+		print "//////////////////////////////////////////////////////////////////////////////////////////"
+		print "//////////////////////////////////////////////////////////////////////////////////////////"
+		print "//////////////////////////////////////////////////////////////////////////////////////////\n"
+
+		print "Starting " + self.name
+		SubmitJobs()
+		print "Exiting " + self.name
+		
+		
+		
 ########################################################################
 ## Main Function Called By Deadline
 ########################################################################
@@ -110,9 +134,9 @@ def __main__():
 
 
 	# Progress Bar
-	scriptDialog.AddRow()
-	progressBarControl = scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
-	scriptDialog.EndRow()
+	# scriptDialog.AddRow()
+	# progressBarControl = scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
+	# scriptDialog.EndRow()
 
 
 	# Submit and Cancel buttons
@@ -206,36 +230,8 @@ def GetScaleAmount ( resolution ):
 	
 	
 
-########################################################################
-## Button Functions
-########################################################################
 
-def FormatComboModified ( *args ):
-	global scriptDialog
-	formatComboValue = scriptDialog.GetValue ( 'FormatComboBox' )
-	if formatComboValue == 'ProRes 4444':
-		scriptDialog.SetEnabled ( 'FPSLabel', True )
-		scriptDialog.SetEnabled ( 'FPSRangeBox', True )
-	else:
-		scriptDialog.SetEnabled ( 'FPSLabel', False )
-		scriptDialog.SetEnabled ( 'FPSRangeBox', False )
-		
-
-def AboutButtonPressed( *args ):
-	global scriptDialog
-	scriptDialog.ShowMessageBox ( "Written by Daniel Harkness, Spinifex Group\n\nGithub:\nhttps://github.com/spinifexgroup-studio/deadline\n\nGithub Script Path:\n/scripts/Jobs/JobCreateProxy"  , 'About' )
-
-
-def CancelButtonPressed( *args ):
-	global scriptDialog
-	scriptDialog.CloseDialog()
-
-
-def SubmitButtonPressed( *args ):
-	global scriptDialog
-	global progressBarControl
-	
-	submitResultsString = ''
+def SubmitJobs( *args ):
 	
 	# Get list of jobs
 	jobs = JobUtils.GetSelectedJobs()
@@ -406,8 +402,7 @@ def SubmitButtonPressed( *args ):
 
 			# Print submission results to console - we only dsplay result of final submission
 			print "---------------------------------------------------------------------------------\n"
-			print submitResultsString
-			submitResultsString = submitString
+			print submitString
 			# Print some info to console
 			print ( "Nuke Args = %s\n" % nukeArgs )
 			
@@ -416,18 +411,49 @@ def SubmitButtonPressed( *args ):
 			
 			progress = int (100.0/numJobs)
 			progress = (i+1)*progress
-			if progress > 100:
+			if (i+1) >= numJobs:
 				progress = 100
-			scriptDialog.SetValue( "ProgressBox", progress )
-			progressBarControl.repaint()
-			print ("Perecent of jobs submitted: " + str(progress) + "\n" )
-			# Debugging
+			# scriptDialog.SetValue( "ProgressBox", progress )
+			# progressBarControl.repaint()
+			print ("Create Proxy: Perecent of jobs submitted: " + str(progress) + "\n" )
 			
+			
+
+########################################################################
+## Button Functions
+########################################################################
+
+def FormatComboModified ( *args ):
+	global scriptDialog
+	formatComboValue = scriptDialog.GetValue ( 'FormatComboBox' )
+	if formatComboValue == 'ProRes 4444':
+		scriptDialog.SetEnabled ( 'FPSLabel', True )
+		scriptDialog.SetEnabled ( 'FPSRangeBox', True )
+	else:
+		scriptDialog.SetEnabled ( 'FPSLabel', False )
+		scriptDialog.SetEnabled ( 'FPSRangeBox', False )
 		
-		
-	configFile = currentUserHomeDirectory + "/settings/JobCreateProxySettings.ini"
-	WriteStickySettings( scriptDialog, configFile )
+
+def AboutButtonPressed( *args ):
+	global scriptDialog
+	scriptDialog.ShowMessageBox ( "Written by Daniel Harkness, Spinifex Group\n\nGithub:\nhttps://github.com/spinifexgroup-studio/deadline\n\nGithub Script Path:\n/scripts/Jobs/JobCreateProxy"  , 'About' )
+
+
+def CancelButtonPressed( *args ):
+	global scriptDialog
 	scriptDialog.CloseDialog()
-	scriptDialog.ShowMessageBox ( "Full submission results are in console. Last submission results:\n\n" + submitResultsString , 'Results of Submission' )
-	
-	
+
+				
+def SubmitButtonPressed( *args ):
+	global scriptDialog
+
+	workerThread = workThread (1, "Create Proxy Thread")
+	workerThread.start()
+
+	configFile = ClientUtils.GetCurrentUserHomeDirectory() + "/settings/JobCreateProxySettings.ini"
+	WriteStickySettings( scriptDialog, configFile )
+
+	scriptDialog.CloseDialog()
+	scriptDialog.ShowMessageBox ( "Your jobs will start appearing in the monitor soon.\n\nFull submission results are in the console.", 'Results of Submission' )
+
+		
