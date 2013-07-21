@@ -3,8 +3,6 @@ Spinifex Deadline Scripts
 
 TODO:
 
-Make progress bar update
+Add progress bar and make update
 
 Fix 2.15GB bug
-
-Add output path to job submission info file

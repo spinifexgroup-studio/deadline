@@ -460,7 +460,7 @@ def SubmitJobs( *args ):
 			jobInfoFile = currentUserTempDirectory + ("/nuke_quicktime_submit_info.job")
 			fileHandle = open( jobInfoFile, "w" )
 			fileHandle.write( "Plugin=Nuke\n" )
-			fileHandle.write( "Name=%s [CREATE QUICKTIME]\n" % job.JobName )
+			fileHandle.write( "Name=%s [CREATE QUICKTIME] -> %s\n" % (job.JobName,outputFilename) )
 			comment = resolution + ', '
 			if shouldAppendLocation:
 				comment = comment + 'dated, '

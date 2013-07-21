@@ -365,7 +365,7 @@ def SubmitJobs( *args ):
 			jobInfoFile = currentUserTempDirectory + ("/nuke_proxy_submit_info.job")
 			fileHandle = open( jobInfoFile, "w" )
 			fileHandle.write( "Plugin=Nuke\n" )
-			fileHandle.write( "Name=%s [CREATE PROXY]\n" % job.JobName )
+			fileHandle.write( "Name=%s [CREATE PROXY] -> %s\n" % (job.JobName,outputFilename) )
 			if format == 'Same as Input':
 				format = outputFilenameExt.upper().replace('.','') 
 			comment = resolution + ', ' + format + ', '
