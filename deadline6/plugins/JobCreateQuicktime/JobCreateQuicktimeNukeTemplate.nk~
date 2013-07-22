@@ -13,6 +13,7 @@ define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
                 <page id="DAG.1"/>
                 <page id="Curve Editor.1"/>
                 <page id="DopeSheet.1"/>
+                <page id="Script Editor.1"/>
                 <page id="Error Console.1"/>
             </dock>
             <split size="507"/>
@@ -26,14 +27,6 @@ define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
             <split size="1200"/>
             <dock id="" activePageId="Viewer.1">
                 <page id="Viewer.1"/>
-            </dock>
-        </splitter>
-    </window>
-    <window x="-1007" y="0" w="927" h="824" screen="1">
-        <splitter orientation="2">
-            <split size="808"/>
-            <dock id="" activePageId="Script Editor.1">
-                <page id="Script Editor.1"/>
             </dock>
         </splitter>
     </window>
@@ -57,13 +50,13 @@ Read {
  xpos -810
  ypos -814
 }
-set N91e76a0 [stack 0]
+set N1a5124e0 [stack 0]
 Dot {
  name Dot2
  xpos -616
  ypos -788
 }
-set N4aa061a0 [stack 0]
+set N1a531ad0 [stack 0]
 Dot {
  name Dot4
  xpos -452
@@ -85,12 +78,12 @@ Grade {
 Text {
  message "Frames\n\nFPS\n\nDate\n\nSequence Directory"
  font ./Arial.ttf
- size {{height/25}}
+ size {{height/25 i}}
  leading 0.2
  xjustify right
  yjustify top
  Transform 1
- box {{width/20} {height/10} {width/3-width/100} {height-height/10 x40 579}}
+ box {{width/20 i} {height/10 i} {width/3-width/100 i} {height-height/10 i x40 579}}
  center {1024 1024}
  color {0.6200000048 0.6200000048 0.6200000048 1}
  name slateTextLeft
@@ -113,7 +106,7 @@ Text {
 Text {
  message "Spinifex Group"
  font ./Arial.ttf
- size {{height/25}}
+ size {{height/20}}
  leading 0.2
  xjustify right
  yjustify bottom
@@ -124,8 +117,8 @@ Text {
  xpos -480
  ypos -652
 }
-set N4aa2aa40 [stack 0]
-push $N4aa061a0
+set N1a56b1a0 [stack 0]
+push $N1a531ad0
 Switch {
  inputs 2
  which {{"inrange(frame, \[value inputSequence.first], \[value inputSequence.first])"}}
@@ -133,7 +126,7 @@ Switch {
  xpos -644
  ypos -652
 }
-push $N91e76a0
+push $N1a5124e0
 Switch {
  inputs 2
  name switchSlate
@@ -145,7 +138,7 @@ Dot {
  xpos -782
  ypos -588
 }
-set N4aa441d0 [stack 0]
+set N1a584970 [stack 0]
 Reformat {
  type "to box"
  box_width {{width}}
@@ -158,10 +151,10 @@ Reformat {
 }
 Text {
  font ./Arial.ttf
- size {{height/30}}
- yjustify center
+ size {{height/20 i x2 46.3292549}}
+ yjustify bottom
  Transform 1
- box {{width/100} {(height/1.2)/100} {width-width/100} {(height/1.2)/10-(height/1.2)/100}}
+ box {{width/100 i} {(height/1.2)/100 i} {width-width/100 i} {(height/1.2)/10-(height/1.2)/100 i}}
  name footerTextLeft
  xpos -641
  ypos -561
@@ -169,30 +162,29 @@ Text {
 Text {
  message "Spinifex Group"
  font ./Arial.ttf
- size {{height/30}}
+ size {{height/20 i}}
  xjustify right
- yjustify center
+ yjustify bottom
  Transform 1
- box {{width/100} {(height/1.2)/100} {width-width/100} {(height/1.2)/10-(height/1.2)/100}}
+ box {{width/100 i} {(height/1.2)/100 i} {width-width/100 i} {(height/1.2)/10-(height/1.2)/100 i}}
  color {0 0.1899999976 0 1}
  name footerTextRight
  xpos -641
  ypos -537
- disable {{"inrange(frame, \[value inputSequence.first], \[value inputSequence.first])" K x2 0}}
+ disable {{"inrange(frame, \[value inputSequence.first], \[value inputSequence.first])" i K x2 0}}
 }
 Text {
  message "\[value root.name]"
  font ./Arial.ttf
  size {{height/30}}
- yjustify center
+ yjustify top
  Transform 1
  box {{width/100} {height-(height/1.2)/10} {width-width/100} {height-(height/1.2)/100}}
  name headerTextLeft
- selected true
  xpos -641
  ypos -513
 }
-push $N4aa441d0
+push $N1a584970
 Switch {
  inputs 2
  name switchFrames
@@ -218,7 +210,7 @@ Write {
  xpos -810
  ypos -424
 }
-push $N4aa2aa40
+push $N1a56b1a0
 Viewer {
  input_process false
  name Viewer1

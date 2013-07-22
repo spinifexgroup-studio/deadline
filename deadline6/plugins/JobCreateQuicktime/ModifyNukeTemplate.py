@@ -40,6 +40,10 @@ readNode.knob('origlast').setValue(lastFrame)
 scaleNode = nuke.toNode('scaleDown')
 scaleNode.knob('scale').setValue(reformatScale)
 
+# Change header text
+textNode = nuke.toNode('headerTextLeft')
+textNode.knob('message').setValue(outScript)
+
 # Change Write Node
 writeNode = nuke.toNode('outputMovie')
 writeNode.knob('file').setValue(outPath)
