@@ -460,22 +460,22 @@ def SubmitJobs( *args ):
 			jobInfoFile = currentUserTempDirectory + ("/nuke_quicktime_submit_info.job")
 			fileHandle = open( jobInfoFile, "w" )
 			fileHandle.write( "Plugin=Nuke\n" )
-			fileHandle.write( "Name=%s [CREATE QUICKTIME] -> %s\n" % (job.JobName,outputFilename) )
-			comment = resolution + ', '
+			fileHandle.write( "Name=%s [CREATE QUICKTIME]\n" % job.JobName )
+			comment = resolution.replace("Resolution","res") + ', ' + codec + ', '
 			if shouldAppendLocation:
 				comment = comment + 'dated, '
 			if shouldWriteSlate: 
 				comment = comment + 'slated, '
 			if shouldWriteToSameDir:
-				comment = comment + 'in sequence directory'
+				comment = comment + 'in seq dir'
 			if shouldWriteToParentDir:
-				comment = comment + 'in sequence parent'
+				comment = comment + 'in seq parent'
 			if shouldWriteTo2dWipDir:
 				comment = comment + 'in 2D WIP'
 			if shouldWriteTo3dWipDir:
 				comment = comment + 'in 3D WIP'
 
-			fileHandle.write( "Comment=%s\n" % comment )
+			fileHandle.write( "Comment=%s  >>>  %s\n" % (comment.upper(), outputFilename) )
 			fileHandle.write( "Department=%s\n" % "Autobots" )
 			fileHandle.write( "Pool=%s\n" % "nuke" )
 			fileHandle.write( "Group=%s\n" % "mac" )

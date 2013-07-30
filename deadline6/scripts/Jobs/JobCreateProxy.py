@@ -364,19 +364,19 @@ def SubmitJobs( *args ):
 			# Create job info file
 			jobInfoFile = currentUserTempDirectory + ("/nuke_proxy_submit_info.job")
 			fileHandle = open( jobInfoFile, "w" )
-			fileHandle.write( "Plugin=Nuke\n" )
-			fileHandle.write( "Name=%s [CREATE PROXY] -> %s\n" % (job.JobName,outputFilename) )
+			fileHandle.write( "Plugin=Nuke\n" )	
+			fileHandle.write( "Name=%s [CREATE PROXY]\n" % job.JobName )
 			if format == 'Same as Input':
 				format = outputFilenameExt.upper().replace('.','') 
-			comment = resolution + ', ' + format + ', '
+			comment = resolution.replace("Resolution","res") + ', ' + format + ', '
 			if shouldWriteToSubDir:
-				comment = comment + 'in sub directory'
+				comment = comment + 'in sub dir'
 			if shouldWriteToSameDir:
-				comment = comment + 'in same directory'
+				comment = comment + 'in same dir'
 			if shouldWriteToParentDir:
-				comment = comment + 'in parent directory'
+				comment = comment + 'in parent dir'
 
-			fileHandle.write( "Comment=%s\n" % comment )
+			fileHandle.write( "Comment=%s  >>>  %s\n" % (comment.upper(), outputFilename ) )
 			fileHandle.write( "Department=%s\n" % "Autobots" )
 			fileHandle.write( "Pool=%s\n" % "nuke" )
 			fileHandle.write( "Group=%s\n" % submitGroup )
