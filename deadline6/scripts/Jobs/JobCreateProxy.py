@@ -279,14 +279,14 @@ def SubmitJobs( *args ):
 		# Iterate thrugh renders in job
 		for j in range ( 0, len (outputDirectories) ):
 			# Get and Set Working Paths
-			outputDirectory = outputDirectories[j]
+			outputDirectory = outputDirectories[j].replace("\\","/")
 			outputFilename = outputFilenames[j]
-			inputPath = Path.Combine(outputDirectory,outputFilename).replace("//","/")
+			inputPath = Path.Combine(outputDirectory,outputFilename).replace("\\","/").replace("//","/")
 			
 			outputFilenameBase, outputFilenameExt = os.path.splitext (outputFilename)
 			
 			# set submission group to all computers - we'll change it to macs if it's a quicktime
-			submitGroup = "all"
+			submitGroup = "none"
 
 			#formats = ('Same as Input','EXR','TGA','JPG','ProRes 4444')
 			if not format == 'Same as Input':
@@ -297,6 +297,11 @@ def SubmitJobs( *args ):
 				if format == 'JPG':
 					outputFilenameExt = '.jpg'
 				if format == 'ProRes 4444':
+
+					# maya ???? bug fix
+					if job.JobPlugin == "MayaBatch" or job.JobPlugin == "MayaCmd":
+						outputFilenameBase = outputFilenameBase.replace("?","#")
+						
 					outputFilenameBase = outputFilenameBase.replace("_#","").replace(".#","").replace("#","")
 					outputFilenameExt = '.mov'
 					# prores can only be written via mac
@@ -318,7 +323,7 @@ def SubmitJobs( *args ):
 
 			# Writing to parent directory ?
 			if shouldWriteToParentDir:
-				outputDirectory = PathUtils.ToPlatformIndependentPath ( outputDirectory ).replace('\\','/')
+				outputDirectory = PathUtils.ToPlatformIndependentPath ( outputDirectory ).replace("\\","/")
 				outputDirectorySplit = outputDirectory.split ('/')
 				newDirectoryPath = ''
 				for k in range ( 0, len (outputDirectorySplit) - 1 ):
@@ -331,12 +336,15 @@ def SubmitJobs( *args ):
 				else:
 					outputDirectory = newDirectoryPath + '/' + outputDirectorySplit[ len (outputDirectorySplit) -1 ] + '_proxy'
 
+
+					
 			# Make Proxy dir if doesn't exist
+			outputDirectory = RepositoryUtils.CheckPathMapping( outputDirectory , True )
 			if not os.path.exists (outputDirectory):
 				os.mkdir (outputDirectory)
 
 			outputFilename = outputFilenameBase + outputFilenameExt
-			outputPath = Path.Combine(outputDirectory,outputFilename).replace("//","/")
+			outputPath = Path.Combine(outputDirectory,outputFilename).replace("\\","/").replace("//","/")
 						
 			# Get some information about the job
 			# sceneFile = JobUtils.GetDataFilename( i )
@@ -351,6 +359,14 @@ def SubmitJobs( *args ):
 			submissionNukeScript = RepositoryUtils.CheckPathMapping ( submissionNukeScript, True ).replace('\\','/')
 			inputPath = RepositoryUtils.CheckPathMapping ( inputPath, True ).replace('\\','/')
 			outputPath = RepositoryUtils.CheckPathMapping ( outputPath, True ).replace('\\','/')
+			
+			# Fix for maya ????? bug
+			comment = ''
+			if job.JobPlugin == "MayaBatch" or job.JobPlugin == "MayaCmd":
+				inputPath = inputPath.replace('?','#')
+				outputPath = outputPath.replace('?','#')
+				comment = 'USING ???? MAYA BUG FIX >>> '
+			
 			
 			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , inputPath , outputPath, format ]
 			for k in range ( 1, len (nukeArgList) ):
@@ -368,7 +384,7 @@ def SubmitJobs( *args ):
 			fileHandle.write( "Name=%s [CREATE PROXY]\n" % job.JobName )
 			if format == 'Same as Input':
 				format = outputFilenameExt.upper().replace('.','') 
-			comment = resolution.replace("Resolution","res") + ', ' + format + ', '
+			comment = comment + resolution.replace("Resolution","res") + ', ' + format + ', '
 			if shouldWriteToSubDir:
 				comment = comment + 'in sub dir'
 			if shouldWriteToSameDir:

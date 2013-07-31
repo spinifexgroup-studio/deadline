@@ -340,13 +340,18 @@ def SubmitJobs( *args ):
 			# Get and Set Working Paths
 			outputDirectory = outputDirectories[j]
 			outputFilename = outputFilenames[j]
-			outputPath = Path.Combine(outputDirectory,outputFilename).replace("//","/")
+			outputPath = Path.Combine(outputDirectory,outputFilename).replace("\\","/").replace("//","/")
 			moviePath = outputDirectory + "/" + Path.GetFileNameWithoutExtension( outputPath )
+			
+			# maya ????? bug fix
+			if job.JobPlugin == "MayaBatch" or job.JobPlugin == "MayaCmd":
+				moviePath = moviePath.replace("?","#")
+			
 			moviePath = moviePath.replace("_#","").replace(".#","").replace("[#","").replace("#]","").replace("#","")
 			
 			# Build Directory of writing one level up
 			if shouldWriteToParentDir:
-				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath ).replace('\\','/')
+				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath ).replace("\\","/").replace("//","/")
 				moviePathSplit = moviePath.split ('/')
 				fileName = moviePathSplit[ len(moviePathSplit) - 1 ]
 				newMoviePath = ''
@@ -360,7 +365,7 @@ def SubmitJobs( *args ):
 			
 			# Build Directory if Writing to WIP directories
 			if shouldWriteTo2dWipDir or shouldWriteTo3dWipDir:
-				moviePath = RepositoryUtils.CheckPathMapping( moviePath , True )
+				moviePath = RepositoryUtils.CheckPathMapping( moviePath , True ).replace("\\","/")
 				moviePathSplit = moviePath.split ('/')
 				fileName = moviePathSplit[ len(moviePathSplit) - 1 ]
 				newMoviePath = ''
@@ -442,9 +447,15 @@ def SubmitJobs( *args ):
 			nukePythonScript = RepositoryUtils.CheckPathMapping ( nukePythonScript, True ).replace('\\','/')
 			templateNukeScript = RepositoryUtils.CheckPathMapping ( templateNukeScript, True ).replace('\\','/')
 			submissionNukeScript = RepositoryUtils.CheckPathMapping ( submissionNukeScript, True ).replace('\\','/')
-			nukeInputSequence = RepositoryUtils.CheckPathMapping ( nukeInputSequence, True ).replace('\\','/')
+			nukeInputSequence = RepositoryUtils.CheckPathMapping ( nukeInputSequence, True ).replace('\\','/')			
 			moviePath = RepositoryUtils.CheckPathMapping ( moviePath, True ).replace('\\','/')
 			fontPath = RepositoryUtils.CheckPathMapping ( fontPath, True ).replace('\\','/')
+
+			# Fix for maya ????? bug
+			comment = ''
+			if job.JobPlugin == "MayaBatch" or job.JobPlugin == "MayaCmd":
+				nukeInputSequence = nukeInputSequence.replace('?','#')
+				comment = 'USING ???? MAYA BUG FIX >>> '
 			
 			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , nukeInputSequence , moviePath, fontPath, codec ]
 			for k in range ( 1, len (nukeArgList) ):
@@ -461,7 +472,7 @@ def SubmitJobs( *args ):
 			fileHandle = open( jobInfoFile, "w" )
 			fileHandle.write( "Plugin=Nuke\n" )
 			fileHandle.write( "Name=%s [CREATE QUICKTIME]\n" % job.JobName )
-			comment = resolution.replace("Resolution","res") + ', ' + codec + ', '
+			comment = comment + resolution.replace("Resolution","res") + ', ' + codec + ', '
 			if shouldAppendLocation:
 				comment = comment + 'dated, '
 			if shouldWriteSlate: 
