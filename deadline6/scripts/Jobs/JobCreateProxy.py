@@ -397,7 +397,7 @@ def SubmitJobs( *args ):
 			fileHandle.write( "Pool=%s\n" % "nuke" )
 			fileHandle.write( "Group=%s\n" % submitGroup )
 			fileHandle.write( "Priority=%s\n" % str(job.JobPriority) )
-			fileHandle.write( "MachineLimit=1\n" )
+			fileHandle.write( "MachineLimit=0\n" )
 			fileHandle.write( "ConcurrentTasks=1\n" )
 			fileHandle.write( "Frames=%s\n" % str(job.JobFrames) )
 			fileHandle.write( "ChunkSize=100\n")

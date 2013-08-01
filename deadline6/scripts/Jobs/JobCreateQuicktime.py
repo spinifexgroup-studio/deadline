@@ -18,6 +18,7 @@ import os
 import shutil
 import ConfigParser
 import threading
+import platform
 
 ########################################################################
 ## Globals
@@ -362,10 +363,13 @@ def SubmitJobs( *args ):
 				outputDirectory = newMoviePath
 				outputFilename = fileName
 				moviePath = newMoviePath + '/' + fileName
+				
+			print ( "The os is %s" % platform.system() )
 			
 			# Build Directory if Writing to WIP directories
 			if shouldWriteTo2dWipDir or shouldWriteTo3dWipDir:
 				moviePath = RepositoryUtils.CheckPathMapping( moviePath , True ).replace("\\","/")
+				
 				moviePathSplit = moviePath.split ('/')
 				fileName = moviePathSplit[ len(moviePathSplit) - 1 ]
 				newMoviePath = ''
@@ -386,14 +390,23 @@ def SubmitJobs( *args ):
 							# ISO date no dashes
 							dateString = str(date.today() ).replace('-','')
 							newMoviePath = newMoviePath + '/' + dateString
+							
+							# Fix windows paths
+							if platform.system() == 'Windows':
+								newMoviePath = newMoviePath[1:]
+								# add // if not a drive letter
+								if newMoviePath[1] != ":":
+									newMoviePath = "//" + newMoviePath
+
 							if not os.path.exists (newMoviePath):
 								os.mkdir (newMoviePath)
 						# Finish up the path and break		
 						outputDirectory = newMoviePath
 						outputFilename = fileName
 						moviePath = newMoviePath + '/' + fileName
+						
 						break
-				
+						
 				'''
 				# Iterate through list till we get to '2_Studio' folder structure
 				for pathItem in moviePathSplit:
