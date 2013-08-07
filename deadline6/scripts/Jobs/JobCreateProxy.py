@@ -18,6 +18,7 @@ import os
 import shutil
 import ConfigParser
 import threading
+import platform
 
 ########################################################################
 ## Globals
@@ -335,8 +336,15 @@ def SubmitJobs( *args ):
 					outputFilenameBase = outputFilenameBase + '_proxy'
 				else:
 					outputDirectory = newDirectoryPath + '/' + outputDirectorySplit[ len (outputDirectorySplit) -1 ] + '_proxy'
-
-
+				
+				
+				# Fix windows paths if needed
+				if platform.system() == 'Windows':
+					outputDirectory = outputDirectory[1:]
+					# add // if not a drive letter
+					if outputDirectory[1] != ":":
+						outputDirectory = "//" + outputDirectory
+				
 					
 			# Make Proxy dir if doesn't exist
 			outputDirectory = RepositoryUtils.CheckPathMapping( outputDirectory , True )
