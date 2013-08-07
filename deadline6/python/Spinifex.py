@@ -7,7 +7,7 @@ TODO:
 '''
 
 import os
-
+from datetime import date
 
 ########################################################################
 ## Helper Functions
@@ -49,3 +49,16 @@ def GetStudioRoot ( directory ):
 	
 def GetParentDir (directory):
 	return os.path.abspath(os.path.join(directory, os.pardir))
+	
+
+def AppendDateToPathWithVersion ( path, ext ):
+	# Provide path with extension separate
+	dateString = str ( date.today() ).replace('-','')
+	i = 1
+	while i > 0:
+		versionString = '{0:02d}'.format(i)
+		i = i + 1
+		appendDate = '_' + dateString + '_' + versionString + ext
+		newPath = path + appendDate
+		if not os.path.exists(newPath):
+			return newPath
