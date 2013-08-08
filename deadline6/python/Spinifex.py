@@ -45,11 +45,7 @@ def GetStudioRoot ( directory ):
 			
 	print ( "Studio Directory is: %s" % studioDirectory )
 	return studioDirectory
-	
-	
-def GetParentDir (directory):
-	return os.path.abspath(os.path.join(directory, os.pardir))
-	
+		
 
 def AppendDateToPathWithVersion ( path, ext ):
 	# Provide path with extension separate

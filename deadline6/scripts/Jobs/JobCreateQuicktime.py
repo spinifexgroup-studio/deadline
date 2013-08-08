@@ -19,6 +19,7 @@ import shutil
 import ConfigParser
 import threading
 import platform
+import Spinifex
 
 ########################################################################
 ## Globals
@@ -78,14 +79,6 @@ def __main__():
 	scriptDialog.AddControl( 'FPSLabel', 'LabelControl', 'FPS', labelWidth, -1 )
 	scriptDialog.AddRangeControl ( 'FPSRangeBox', 'RangeControl', 30, 1, 60, 0, 1, fullControlWidth, -1 )
 	scriptDialog.EndRow()
-	'''
-	# FPS Range Popup
-	fps = ('25', '30', '50', '60')
-	scriptDialog.AddRow()
-	scriptDialog.AddControl( 'ResolutionLabel', 'LabelControl', 'Resolution', labelWidth, -1 )
-	scriptDialog.AddComboControl ( 'FPSRangeBox' , 'ComboControl', fps[1], fps, smallControlWidth, -1 )
-	scriptDialog.EndRow()
-	'''
 	# Resolution Popup
 	resolutions = ('Full Resolution', 'Half Resolution', 'Third Resolution', 'Quarter Resolution')
 	scriptDialog.AddRow()
@@ -98,14 +91,6 @@ def __main__():
 	scriptDialog.AddControl( 'CodecLabel', 'LabelControl', 'Codec', labelWidth, -1 )
 	scriptDialog.AddComboControl ( 'CodecComboBox' , 'ComboControl', codecs[2], codecs, smallControlWidth, -1 )
 	scriptDialog.EndRow()
-	'''
-	# Bitrate Range
-	scriptDialog.AddRow()
-	scriptDialog.AddControl( 'BitRateLabel', 'LabelControl', 'H.264 Bit Rate', labelWidth, -1 )
-	scriptDialog.AddRangeControl ( 'BitRateRangeBox', 'RangeControl', 8000, 1000, 20000, 0, 1000, fullControlWidth, -1 )
-	scriptDialog.EndRow()
-	'''
-
 	# End Settings group
 	scriptDialog.EndGroupBox( False )
 	
@@ -154,7 +139,6 @@ def __main__():
 	# progressBarControl = scriptDialog.AddRangeControl( "ProgressBox", "ProgressBarControl", 1, 1, 100, 0, 0, dialogWidth, -1 )
 	# scriptDialog.EndRow()
 
-	
 	# Submit and Cancel buttons
 	scriptDialog.AddRow()
 	aboutButton = scriptDialog.AddControl( 'AboutButton', 'ButtonControl', '?', 20, -1 )
@@ -165,8 +149,6 @@ def __main__():
 	submitButton = scriptDialog.AddControl( 'SubmitButton', 'ButtonControl', 'Submit', 100, -1)
 	submitButton.ValueModified.connect(SubmitButtonPressed)
 	scriptDialog.EndRow()
-	
-	
 	
 	# Read in config File
 	configFile = ClientUtils.GetCurrentUserHomeDirectory() + "/settings/JobCreateQuicktimeSettings.ini"
@@ -287,7 +269,6 @@ def SubmitJobs( *args ):
 	
 	# Get Data from Dialog Box
 	codec = str( scriptDialog.GetValue( 'CodecComboBox' ) )
-	# bitRate = int( scriptDialog.GetValue( 'BitRateRangeBox' ) )
 	frameRate = int( scriptDialog.GetValue( 'FPSRangeBox' ) )
 	resolution = str( scriptDialog.GetValue( 'ResolutionComboBox' ) )
 	shouldAppendLocation = scriptDialog.GetValue ( 'AppendDateCheckBox' )
@@ -306,9 +287,7 @@ def SubmitJobs( *args ):
 	if IsRunningOnMac():
 		nukePath = '/Applications/Nuke6.3v4/Nuke6.3v4.app/Contents/MacOS/Nuke6.3v4'
 	else:
-		nukePath = 'C:/Program Files/Nuke6.3v4/Nuke6.3.exe'
-		if not FileExists (nukePath):
-			nukePath = 'C:/Program Files/Nuke6.3v1/Nuke6.3.exe'
+		nukePath = 'C:/Program Files/Nuke6.3v1/Nuke6.3.exe'
 	if not FileExists (nukePath):
 		CloseDialog()	
 		scriptDialog.ShowMessageBox ( "Cannot run wihout Nuke 6.3 installed"  , 'Error' )
@@ -329,7 +308,6 @@ def SubmitJobs( *args ):
 	except:
 		pass
 
-	
 	# Iterate through selected jobs
 	for i in range( 0, numJobs ):
 		job = jobs [i]
@@ -341,112 +319,48 @@ def SubmitJobs( *args ):
 			# Get and Set Working Paths
 			outputDirectory = outputDirectories[j]
 			outputFilename = outputFilenames[j]
-			outputPath = Path.Combine(outputDirectory,outputFilename).replace("\\","/").replace("//","/")
-			moviePath = outputDirectory + "/" + Path.GetFileNameWithoutExtension( outputPath )
+			outputPath = Path.Combine(outputDirectory,outputFilename).replace("\\","/")
+			filenameWithoutExtension = Path.GetFileNameWithoutExtension( outputPath )
 			
+			comment = ''
 			# maya ????? bug fix
 			if job.JobPlugin == "MayaBatch" or job.JobPlugin == "MayaCmd":
-				moviePath = moviePath.replace("?","#")
-			
-			moviePath = moviePath.replace("_#","").replace(".#","").replace("[#","").replace("#]","").replace("#","")
-			
+				filenameWithoutExtension = filenameWithoutExtension.replace("?","#")
+				outputPath = outputPath.replace("?","#")
+				comment = 'USING ???? MAYA BUG FIX >>> '
+				
+			filenameWithoutExtension = filenameWithoutExtension.replace("_#","").replace(".#","").replace("#","")
+			moviePath = ("%s/%s" % (outputDirectory, filenameWithoutExtension))
+
 			# Build Directory of writing one level up
 			if shouldWriteToParentDir:
-				moviePath = PathUtils.ToPlatformIndependentPath ( moviePath ).replace("\\","/").replace("//","/")
-				moviePathSplit = moviePath.split ('/')
-				fileName = moviePathSplit[ len(moviePathSplit) - 1 ]
-				newMoviePath = ''
-				for k in range ( 0, len (moviePathSplit) - 2 ):
-					pathItem = moviePathSplit[k]
-					if pathItem != '':
-						newMoviePath = newMoviePath + '/' + pathItem
-				outputDirectory = newMoviePath
-				outputFilename = fileName
-				moviePath = newMoviePath + '/' + fileName
-				
-			print ( "The os is %s" % platform.system() )
+				moviePath = ("%s/%s" % (os.path.abspath(os.path.join(moviePath, os.pardir)) , filenameWithoutExtension))
 			
 			# Build Directory if Writing to WIP directories
 			if shouldWriteTo2dWipDir or shouldWriteTo3dWipDir:
-				moviePath = RepositoryUtils.CheckPathMapping( moviePath , True ).replace("\\","/")
-				
-				moviePathSplit = moviePath.split ('/')
-				fileName = moviePathSplit[ len(moviePathSplit) - 1 ]
-				newMoviePath = ''
-				# Iterate through list till we get to 2D or 3D directory
-				for k in range ( 0, len (moviePathSplit)):
-					popItem = moviePathSplit.pop()
-					if popItem == '2D' or popItem == '3D':
-						for pathItem in moviePathSplit:
-							# Check for null strings - prevents // in path
-							if pathItem != '':
-								newMoviePath = newMoviePath + '/' + pathItem
-						if shouldWriteTo2dWipDir:
-							newMoviePath = newMoviePath + '/2D/_Renders/WIP'
-						if shouldWriteTo3dWipDir:
-							newMoviePath = newMoviePath + '/3D/Renders/_WIP'
-						# Make a date folder if we are making dated files
-						if shouldAppendLocation:
-							# ISO date no dashes
-							dateString = str(date.today() ).replace('-','')
-							newMoviePath = newMoviePath + '/' + dateString
-							
-							# Fix windows paths
-							if platform.system() == 'Windows':
-								newMoviePath = newMoviePath[1:]
-								# add // if not a drive letter
-								if newMoviePath[1] != ":":
-									newMoviePath = "//" + newMoviePath
-
-							if not os.path.exists (newMoviePath):
-								os.mkdir (newMoviePath)
-						# Finish up the path and break		
-						outputDirectory = newMoviePath
-						outputFilename = fileName
-						moviePath = newMoviePath + '/' + fileName
-						
-						break
-						
-				'''
-				# Iterate through list till we get to '2_Studio' folder structure
-				for pathItem in moviePathSplit:
-					# Check for null strings - prevents // in path
-					if pathItem != '':
-						newMoviePath = newMoviePath + '/' + pathItem
-						if pathItem == '2_Studio':
-							if shouldWriteTo2dWipDir:
-								newMoviePath = newMoviePath + '/2D/_Renders/WIP'
-							if shouldWriteTo3dWipDir:
-								newMoviePath = newMoviePath + '/3D/Renders/_WIP'
-							# Make a date folder if we are making dated files
-							if shouldAppendLocation:
-								# ISO date no dashes
-								dateString = str(date.today() ).replace('-','')
-								newMoviePath = newMoviePath + '/' + dateString
-								if not os.path.exists (newMoviePath):
-									os.mkdir (newMoviePath)
-							# Finish up the path and break		
-							moviePath = newMoviePath + '/' + moviePathSplit[ len(moviePathSplit) - 1 ]
-							break
-				'''
+				moviePath = Spinifex.GetStudioRoot ( outputDirectory )
+				if shouldWriteTo2dWipDir:
+					moviePath = moviePath + '/2D/_Renders/WIP'
+				if shouldWriteTo3dWipDir:
+					moviePath = moviePath + '/3D/Renders/_WIP'
+				# Make a date folder if we are making dated files
+				if shouldAppendLocation:
+					# ISO date no dashes
+					dateString = str(date.today() ).replace('-','')
+					moviePath = moviePath + '/' + dateString
+					platformIndepententMoviePath = RepositoryUtils.CheckPathMapping ( moviePath, True ).replace('\\','/')
+					if not os.path.exists (platformIndepententMoviePath):
+						os.mkdir (platformIndepententMoviePath)
+				# Finish up the path		
+				moviePath = ("%s/%s" % (moviePath, filenameWithoutExtension))
+					
 			
 			# Append date to file in form _YYYY-MM-DD_VV.mov
+			movieExt = '.mov'
 			if shouldAppendLocation:
-				dateString = str ( date.today() ).replace('-','')
-				haveFoundDatedFileName = False
-				k = 1
-				while not haveFoundDatedFileName:
-					versionString = '{0:02d}'.format(k)
-					k = k + 1
-					appendDate = '_' + dateString + '_' + versionString + '.mov'
-					newMoviePath = moviePath + appendDate
-					if not FileExists (newMoviePath):
-						moviePath = newMoviePath
-						outputFilename = outputFilename + appendDate
-						haveFoundDatedFileName = True
+				moviePath = Spinifex.AppendDateToPathWithVersion ( moviePath, movieExt )
 			else:
-				moviePath = moviePath + '.mov'
-				outputFilename = outputFilename +'.mov'
+				moviePath = moviePath + movieExt
 							
 			# Get some information about the job
 			# sceneFile = JobUtils.GetDataFilename( i )
@@ -463,12 +377,6 @@ def SubmitJobs( *args ):
 			nukeInputSequence = RepositoryUtils.CheckPathMapping ( nukeInputSequence, True ).replace('\\','/')			
 			moviePath = RepositoryUtils.CheckPathMapping ( moviePath, True ).replace('\\','/')
 			fontPath = RepositoryUtils.CheckPathMapping ( fontPath, True ).replace('\\','/')
-
-			# Fix for maya ????? bug
-			comment = ''
-			if job.JobPlugin == "MayaBatch" or job.JobPlugin == "MayaCmd":
-				nukeInputSequence = nukeInputSequence.replace('?','#')
-				comment = 'USING ???? MAYA BUG FIX >>> '
 			
 			nukeArgList = [ '-t', nukePythonScript, templateNukeScript , submissionNukeScript , nukeInputSequence , moviePath, fontPath, codec ]
 			for k in range ( 1, len (nukeArgList) ):
@@ -479,6 +387,8 @@ def SubmitJobs( *args ):
 			if not ProcessUtils.WaitForExit ( nukeProcess, 10000 ): # Wait up to ten seconds for script to be made
 				return #nuke failed
 
+			# Change the output directory and filename for the job info file
+			outputDirectory, outputFilename = os.path.split (moviePath)
 
 			# Create job info file
 			jobInfoFile = currentUserTempDirectory + ("/nuke_quicktime_submit_info.job")
