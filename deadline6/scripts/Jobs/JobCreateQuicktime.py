@@ -334,7 +334,7 @@ def SubmitJobs( *args ):
 
 			# Build Directory of writing one level up
 			if shouldWriteToParentDir:
-				moviePath = ("%s/%s" % (os.path.abspath(os.path.join(moviePath, os.pardir)) , filenameWithoutExtension))
+				moviePath = ("%s/%s" % (os.path.abspath(os.path.join(outputDirectory, os.pardir)) , filenameWithoutExtension))
 			
 			# Build Directory if Writing to WIP directories
 			if shouldWriteTo2dWipDir or shouldWriteTo3dWipDir:
@@ -358,7 +358,8 @@ def SubmitJobs( *args ):
 			# Append date to file in form _YYYY-MM-DD_VV.mov
 			movieExt = '.mov'
 			if shouldAppendLocation:
-				moviePath = Spinifex.AppendDateToPathWithVersion ( moviePath, movieExt )
+				platformIndepententMoviePath = RepositoryUtils.CheckPathMapping ( moviePath, True ).replace('\\','/')
+				moviePath = Spinifex.AppendDateToPathWithVersion ( platformIndepententMoviePath, movieExt )
 			else:
 				moviePath = moviePath + movieExt
 							

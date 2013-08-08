@@ -54,7 +54,8 @@ def AppendDateToPathWithVersion ( path, ext ):
 	while i > 0:
 		versionString = '{0:02d}'.format(i)
 		i = i + 1
-		appendDate = '_' + dateString + '_' + versionString + ext
-		newPath = path + appendDate
+		appendDate = '_' + dateString + '_' + versionString
+		newPath = path + appendDate + ext
+		
 		if not os.path.exists(newPath):
 			return newPath
